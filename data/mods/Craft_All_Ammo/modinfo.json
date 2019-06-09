@@ -1,0 +1,11 @@
+[
+  {
+    "type": "MOD_INFO",
+    "ident": "craft_all_gunpowder",
+    "name": "Craft All Ammo",
+    "authors": [ "Zanos" ],
+    "description": "Adds recipies for all ammunition, including factory quality caseless rounds. Sense of recipies not guranteed.",
+    "category": "items",
+    "dependencies": [ "dda" ]
+  }
+]

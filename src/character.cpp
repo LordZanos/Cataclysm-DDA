@@ -1662,6 +1662,9 @@ void Character::item_encumb( std::array<encumbrance_data, num_bp> &vals,
 
         // Add armor and layering penalties for the final values
         elem.encumbrance += elem.armor_encumbrance + elem.layer_penalty;
+        // Zanos custom high strength reduces encumbrance
+        elem.encumbrance -= get_str();
+        elem.encumbrance = std::max(0, elem.encumbrance);
     }
 }
 

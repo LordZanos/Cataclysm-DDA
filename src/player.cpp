@@ -11686,7 +11686,9 @@ int player::get_hp_max( hp_part bp ) const
 
 int player::get_stamina_max() const
 {
-    int maxStamina = get_option< int >( "PLAYER_MAX_STAMINA" );
+    // Zanos custom, str increases stamina
+    int baseStamina = 600;
+    int maxStamina = baseStamina + (600 * get_str());
     if( has_trait( trait_BADCARDIO ) ) {
         return maxStamina * 0.75;
     }

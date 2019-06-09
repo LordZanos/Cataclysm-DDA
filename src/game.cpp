@@ -9118,8 +9118,8 @@ bool game::plfire_check( const targeting_data &args )
                 return false;
             }
         }
-
-        if( gun->has_flag( "MOUNTED_GUN" ) ) {
+        // Zanos custom guns for big bois
+        if( gun->has_flag( "MOUNTED_GUN" ) && u.get_str() < 16 ) {
             const bool v_mountable = static_cast<bool>( m.veh_at( u.pos() ).part_with_feature( "MOUNTABLE",
                                      true ) );
             bool t_mountable = m.has_flag_ter_or_furn( "MOUNTABLE", u.pos() );
