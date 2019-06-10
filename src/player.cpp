@@ -11175,8 +11175,12 @@ int player::get_hp_max( hp_part bp ) const
 
 int player::get_stamina_max() const
 {
+    // Zanos custom strength increases stamina
     int maxStamina = get_option< int >( "PLAYER_MAX_STAMINA" );
     maxStamina *= Character::mutation_value( "max_stamina_modifier" );
+    float strengthFactor = 1.0 + ((float)(get_str() - 8.0)) * 0.05;
+    float floatStam = (float)maxStamina * strengthFactor;
+    maxStamina = (int) floatStam;
     return maxStamina;
 }
 
