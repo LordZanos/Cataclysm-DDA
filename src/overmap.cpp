@@ -51,7 +51,7 @@
 #include "monster.h"
 #include "string_formatter.h"
 
-#define dbg(x) DebugLog((DebugLevel)(x),D_MAP_GEN) << __FILE__ << ":" << __LINE__ << ": "
+#define dbg(x) DebugLog((x),D_MAP_GEN) << __FILE__ << ":" << __LINE__ << ": "
 
 #define BUILDINGCHANCE 4
 #define MIN_ANT_SIZE 8
@@ -160,7 +160,7 @@ static size_t from_dir( om_direction::type dir )
     return 0;
 }
 
-}
+} // namespace om_lines
 
 //const regional_settings default_region_settings;
 t_regional_settings_map region_settings_map;
@@ -173,7 +173,7 @@ generic_factory<oter_type_t> terrain_types( "overmap terrain type" );
 generic_factory<oter_t> terrains( "overmap terrain" );
 generic_factory<overmap_special> specials( "overmap special" );
 
-}
+} // namespace
 
 static const std::map<std::string, oter_flags> oter_flags_map = {
     { "KNOWN_DOWN",     known_down     },
@@ -474,6 +474,13 @@ bool is_river_or_lake( const oter_id &ter )
 }
 
 bool is_ot_type( const std::string &otype, const oter_id &oter )
+{
+    // Is a match if the base type is the same which will allow for handling rotations/linear features
+    // but won't incorrectly match other locations that happen to contain the substring.
+    return otype == oter->get_type_id().str();
+}
+
+bool is_ot_prefix( const std::string &otype, const oter_id &oter )
 {
     const size_t oter_size = oter.id().str().size();
     const size_t compare_size = otype.size();
@@ -1957,7 +1964,7 @@ void overmap::place_forest_trails()
     for( int i = 0; i < OMAPX; i++ ) {
         for( int j = 0; j < OMAPY; j++ ) {
             oter_id oter = ter( i, j, 0 );
-            if( !is_ot_type( "forest", oter ) ) {
+            if( !is_ot_prefix( "forest", oter ) ) {
                 continue;
             }
 
@@ -3500,7 +3507,7 @@ bool overmap::check_overmap_special_type( const overmap_special_id &id,
 
 void overmap::good_river( int x, int y, int z )
 {
-    if( !is_ot_type( "river", get_ter( x, y, z ) ) ) {
+    if( !is_ot_prefix( "river", get_ter( x, y, z ) ) ) {
         return;
     }
     if( ( x == 0 ) || ( x == OMAPX - 1 ) ) {
@@ -4027,7 +4034,6 @@ void overmap::place_specials( overmap_special_batch &enabled_specials )
     // occurrences, this will only contain those which have not yet met their
     // maximum.
     std::map<overmap_special_id, int> processed_specials;
-    std::map<overmap_special_id, int>::iterator iter;
     for( auto &elem : custom_overmap_specials ) {
         processed_specials[elem.special_details->id] = elem.instances_placed;
     }
@@ -4035,7 +4041,8 @@ void overmap::place_specials( overmap_special_batch &enabled_specials )
     // Loop through the specials we started with.
     for( auto it = enabled_specials.begin(); it != enabled_specials.end(); ) {
         // Determine if this special is still in our callee's list of specials...
-        iter = processed_specials.find( it->special_details->id );
+        std::map<overmap_special_id, int>::iterator iter = processed_specials.find(
+                    it->special_details->id );
         if( iter != processed_specials.end() ) {
             // ... and if so, increment the placement count to reflect the callee's.
             it->instances_placed += ( iter->second - it->instances_placed );
