@@ -268,6 +268,12 @@
   },
   {
     "type": "start_location",
+    "ident": "mi-go_camp",
+    "name": "Mi-go camp",
+    "target": "mi-go_camp1"
+  },
+  {
+    "type": "start_location",
     "ident": "Swamp Shack",
     "name": "Hermit Shack",
     "target": "hunter_shack"
@@ -301,12 +307,6 @@
     "ident": "survivalist farm",
     "name": "farm",
     "target": "farm_2"
-  },
-  {
-    "type": "start_location",
-    "ident": "cabin_woods",
-    "name": "cabin in the woods",
-    "target": "cabin"
   },
   {
     "type": "start_location",
@@ -379,5 +379,17 @@
     "ident": "horse_farm_13",
     "name": "Horse Ranch",
     "target": "horse_farm_13"
+  },
+  {
+    "type": "start_location",
+    "ident": "cabin_lake",
+    "name": "Lake Cabin",
+    "target": "cabin_lake"
+  },
+  {
+    "type": "start_location",
+    "ident": "lighthouse_ground",
+    "name": "Lighthouse Island",
+    "target": "lighthouse_ground"
   }
 ]

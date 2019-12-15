@@ -7,7 +7,16 @@
     "color": "light_gray",
     "see_cost": 5,
     "mondensity": 2,
-    "flags": [ "SIDEWALK" ]
+    "flags": [ "SIDEWALK", "SOURCE_VEHICLES", "SOURCE_FABRICATION", "SOURCE_CONSTRUCTION" ]
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "public_works_NE_roof",
+    "name": "public works roof",
+    "sym": "w",
+    "color": "light_gray",
+    "see_cost": 5,
+    "mondensity": 2
   },
   {
     "type": "overmap_terrain",
@@ -17,7 +26,16 @@
     "color": "light_gray",
     "see_cost": 5,
     "mondensity": 2,
-    "flags": [ "SIDEWALK" ]
+    "flags": [ "SIDEWALK", "SOURCE_VEHICLES", "SOURCE_FABRICATION", "SOURCE_CONSTRUCTION" ]
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "public_works_NW_roof",
+    "name": "public works roof",
+    "sym": "w",
+    "color": "light_gray",
+    "see_cost": 5,
+    "mondensity": 2
   },
   {
     "type": "overmap_terrain",
@@ -27,7 +45,16 @@
     "color": "light_gray",
     "see_cost": 5,
     "mondensity": 2,
-    "flags": [ "SIDEWALK" ]
+    "flags": [ "SIDEWALK", "SOURCE_VEHICLES", "SOURCE_FABRICATION", "SOURCE_CONSTRUCTION" ]
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "public_works_SW_roof",
+    "name": "public works roof",
+    "sym": "W",
+    "color": "light_gray",
+    "see_cost": 5,
+    "mondensity": 2
   },
   {
     "type": "overmap_terrain",
@@ -37,7 +64,16 @@
     "color": "light_gray",
     "see_cost": 5,
     "mondensity": 2,
-    "flags": [ "SIDEWALK" ]
+    "flags": [ "SIDEWALK", "SOURCE_VEHICLES", "SOURCE_FABRICATION", "SOURCE_CONSTRUCTION" ]
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "public_works_SE_roof",
+    "name": "public works roof",
+    "sym": "w",
+    "color": "light_gray",
+    "see_cost": 5,
+    "mondensity": 2
   },
   {
     "type": "overmap_terrain",
@@ -45,8 +81,7 @@
     "name": "serving area interface",
     "sym": "0",
     "color": "i_magenta",
-    "see_cost": 5,
-    "flags": [ "NO_ROTATE" ]
+    "see_cost": 5
   },
   {
     "type": "overmap_terrain",
@@ -55,8 +90,16 @@
     "sym": "H",
     "color": "light_cyan",
     "see_cost": 5,
-    "extras": "field",
-    "flags": [ "NO_ROTATE" ]
+    "extras": "field"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "pwr_sub_s_roof",
+    "name": "small power substation roof",
+    "sym": "H",
+    "color": "light_cyan",
+    "see_cost": 5,
+    "extras": "field"
   },
   {
     "type": "overmap_terrain",
@@ -65,8 +108,16 @@
     "sym": "H",
     "color": "cyan",
     "see_cost": 5,
-    "extras": "field",
-    "flags": [ "NO_ROTATE" ]
+    "extras": "field"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "pwr_large_entrance_roof",
+    "name": "large power substation roof",
+    "sym": "H",
+    "color": "cyan",
+    "see_cost": 5,
+    "extras": "field"
   },
   {
     "type": "overmap_terrain",
@@ -75,8 +126,16 @@
     "sym": "H",
     "color": "cyan",
     "see_cost": 5,
-    "extras": "field",
-    "flags": [ "NO_ROTATE" ]
+    "extras": "field"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "pwr_large_2_roof",
+    "name": "large power substation roof",
+    "sym": "H",
+    "color": "cyan",
+    "see_cost": 5,
+    "extras": "field"
   },
   {
     "type": "overmap_terrain",
@@ -85,8 +144,7 @@
     "sym": "H",
     "color": "cyan",
     "see_cost": 5,
-    "extras": "field",
-    "flags": [ "NO_ROTATE" ]
+    "extras": "field"
   },
   {
     "type": "overmap_terrain",
@@ -95,14 +153,21 @@
     "sym": "H",
     "color": "cyan",
     "see_cost": 5,
-    "extras": "field",
-    "flags": [ "NO_ROTATE" ]
+    "extras": "field"
   },
   {
     "type": "overmap_terrain",
     "id": "warehouse",
     "copy-from": "generic_city_building",
     "name": "small warehouse",
+    "sym": "w",
+    "color": "light_blue"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "warehouse_roof",
+    "copy-from": "generic_city_building",
+    "name": "small warehouse roof",
     "sym": "w",
     "color": "light_blue"
   },
@@ -115,12 +180,37 @@
     "color": "i_yellow"
   },
   {
+    "id": "small_storage_units_roof",
+    "type": "overmap_terrain",
+    "copy-from": "generic_city_building",
+    "name": "small storage units roof",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "id": "small_storage_units_1",
+    "type": "overmap_terrain",
+    "copy-from": "generic_city_building",
+    "name": "small storage units",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "id": "small_storage_units_roof_1",
+    "type": "overmap_terrain",
+    "copy-from": "generic_city_building",
+    "name": "small storage units roof",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
     "type": "overmap_terrain",
     "id": "lumberyard_0_0",
     "name": "lumberyard",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -128,7 +218,8 @@
     "name": "lumberyard",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -136,7 +227,8 @@
     "name": "lumberyard",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -144,7 +236,8 @@
     "name": "lumberyard",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -184,7 +277,8 @@
     "name": "lumbermill",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -192,7 +286,8 @@
     "name": "lumbermill",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -200,7 +295,8 @@
     "name": "lumbermill",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -208,7 +304,8 @@
     "name": "lumbermill",
     "copy-from": "generic_city_building",
     "sym": "L",
-    "color": "i_green"
+    "color": "i_green",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -249,7 +346,8 @@
     "copy-from": "generic_city_building_no_sidewalk",
     "sym": "L",
     "color": "green",
-    "extras": "field"
+    "extras": "field",
+    "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ]
   },
   {
     "type": "overmap_terrain",
@@ -257,7 +355,8 @@
     "name": "construction site",
     "copy-from": "generic_city_building",
     "sym": "x",
-    "color": "i_light_gray"
+    "color": "i_light_gray",
+    "extend": { "flags": [ "SOURCE_CONSTRUCTION", "SOURCE_FABRICATION" ] }
   },
   {
     "type": "overmap_terrain",
@@ -349,9 +448,25 @@
   },
   {
     "type": "overmap_terrain",
+    "id": "large_storage_units_roof_3",
+    "copy-from": "generic_city_building",
+    "name": "storage units roof",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "type": "overmap_terrain",
     "id": "large_storage_units_2",
     "copy-from": "generic_city_building",
     "name": "storage units",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "large_storage_units_roof_2",
+    "copy-from": "generic_city_building",
+    "name": "storage units roof",
     "sym": "#",
     "color": "i_yellow"
   },
@@ -365,9 +480,25 @@
   },
   {
     "type": "overmap_terrain",
+    "id": "large_storage_units_roof_1",
+    "copy-from": "generic_city_building",
+    "name": "storage units roof",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "type": "overmap_terrain",
     "id": "medium_storage_units_1",
     "copy-from": "generic_city_building",
     "name": "storage units",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "medium_storage_units_roof_1",
+    "copy-from": "generic_city_building",
+    "name": "storage units roof",
     "sym": "#",
     "color": "i_yellow"
   },
@@ -378,5 +509,493 @@
     "name": "storage units",
     "sym": "#",
     "color": "i_yellow"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "medium_storage_units_roof_2",
+    "copy-from": "generic_city_building",
+    "name": "storage units",
+    "sym": "#",
+    "color": "i_yellow"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_1",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_4",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_1",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_4",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_1",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_4",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_1",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_rail_1",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill depot",
+    "sym": "|",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_1",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_rail_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill depot",
+    "sym": "|",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_3_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_4_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_3_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_4_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_3_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_4_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_3_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_rail_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill depot",
+    "sym": "|",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_1_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_3_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_rail_2_2",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill depot",
+    "sym": "|",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_3_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_0_4_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_3_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_1_4_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_3_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_2_4_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_3_3_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_rail_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill depot",
+    "sym": "|",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_1_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_4_3_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill",
+    "sym": "S",
+    "color": "dark_gray"
+  },
+  {
+    "type": "overmap_terrain",
+    "id": "steel_mill_rail_2_3",
+    "copy-from": "generic_city_building_no_sidewalk",
+    "name": "steel mill depot",
+    "sym": "|",
+    "color": "dark_gray"
   }
 ]

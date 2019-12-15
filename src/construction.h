@@ -9,12 +9,15 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <utility>
 
-#include "construction_category.h"
 #include "item.h"
 #include "optional.h"
 #include "string_id.h"
 #include "type_id.h"
+
+class inventory;
+class player;
 
 namespace catacurses
 {
@@ -54,8 +57,13 @@ struct construction {
         // Flags beginning terrain must have
         std::set<std::string> pre_flags;
 
+        // Post construction flags
+        std::set<std::string> post_flags;
+
         /** Skill->skill level mapping. Can be empty. */
         std::map<skill_id, int> required_skills;
+        // the requirements specified by "using"
+        std::vector<std::pair<requirement_id, int>> reqs_using;
         requirement_id requirements;
 
         // Index in construction vector
@@ -73,7 +81,6 @@ struct construction {
         std::function<void( const tripoint & )> post_special;
         // Custom error message display
         std::function<void( const tripoint & )> explain_failure;
-
         // Whether it's furniture or terrain
         bool pre_is_furniture;
         // Whether it's furniture or terrain
@@ -97,7 +104,7 @@ const std::vector<construction> &get_constructions();
 //! Set all constructions to take the specified time.
 void standardize_construction_times( int time );
 
-void load_construction( JsonObject &jo );
+void load_construction( const JsonObject &jo );
 void reset_constructions();
 int construction_menu( bool blueprint );
 void complete_construction( player *p );

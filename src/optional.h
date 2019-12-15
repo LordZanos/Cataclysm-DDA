@@ -190,7 +190,7 @@ class optional
                        std::is_convertible < U &&, T >::value, bool >::type = true >
         optional & operator=( U && value ) {
             if( full ) {
-                get() =  std::forward<U>( value );
+                get() = std::forward<U>( value );
             } else {
                 construct( std::forward<U>( value ) );
             }
@@ -233,6 +233,24 @@ class optional
             }
         }
 };
+
+template<class T, class U>
+constexpr bool operator==( const optional<T> &lhs, const optional<U> &rhs )
+{
+    if( lhs.has_value() != rhs.has_value() ) {
+        return false;
+    } else if( !lhs ) {
+        return true;
+    } else {
+        return *lhs == *rhs;
+    }
+}
+
+template< class T, class U >
+constexpr bool operator!=( const optional<T> &lhs, const optional<U> &rhs )
+{
+    return !operator==( lhs, rhs );
+}
 
 } // namespace cata
 

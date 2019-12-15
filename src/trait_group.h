@@ -7,7 +7,6 @@
 #include <string>
 
 #include "string_id.h"
-#include "int_id.h"
 #include "type_id.h"
 
 class JsonObject;
@@ -33,7 +32,8 @@ bool group_contains_trait( const Trait_group_tag &gid, const trait_id &tid );
 /**
  * See @ref mutation_branch::load_trait_group
  */
-void load_trait_group( JsonObject &jsobj, const Trait_group_tag &gid, const std::string &subtype );
+void load_trait_group( const JsonObject &jsobj, const Trait_group_tag &gid,
+                       const std::string &subtype );
 
 /**
  * Get a trait group ID and optionally load an inlined trait group.

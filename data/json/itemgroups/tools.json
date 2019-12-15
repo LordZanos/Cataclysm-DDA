@@ -52,6 +52,7 @@
       [ "bucket", 5 ],
       [ "jumper_cable", 10 ],
       [ "funnel", 50 ],
+      [ "claw_bar", 2 ],
       [ "crowbar", 10 ],
       [ "thermometer", 5 ],
       [ "multitool", 10 ],
@@ -86,6 +87,38 @@
     ]
   },
   {
+    "id": "tools_hunting",
+    "type": "item_group",
+    "//": "Gear that hunters take on hunting trips.",
+    "items": [
+      [ "binoculars", 15 ],
+      [ "canteen", 25 ],
+      [ "e_tool", 20 ],
+      [ "flashlight", 20 ],
+      [ "goggles_nv", 5 ],
+      [ "hand_crank_charger", 15 ],
+      [ "handflare", 20 ],
+      [ "hatchet", 10 ],
+      [ "heavy_flashlight", 15 ],
+      [ "knife_folding", 25 ],
+      [ "knife_hunting", 10 ],
+      [ "knife_rambo", 10 ],
+      [ "knife_swissarmy", 10 ],
+      [ "mess_kit", 20 ],
+      [ "multitool", 10 ],
+      [ "pockknife", 30 ],
+      [ "pur_tablets", 10 ],
+      [ "ref_lighter", 20 ],
+      [ "rope_30", 20 ],
+      [ "flint_steel", 10 ],
+      [ "tinderbox", 10 ],
+      [ "lifestraw", 4 ],
+      [ "chem_hexamine", 10 ],
+      [ "esbit_stove", 15 ],
+      [ "mess_tin", 10 ]
+    ]
+  },
+  {
     "id": "tools_earthworking",
     "type": "item_group",
     "//": "Portable tools for earthworking or farming",
@@ -112,6 +145,7 @@
     "items": [
       { "group": "tools_common", "prob": 100 },
       [ "wrench", 200 ],
+      [ "claw_bar", 2 ],
       [ "crowbar", 10 ],
       [ "pliers", 200 ],
       [ "bucket", 50 ],
@@ -149,7 +183,7 @@
     "id": "tools_entry",
     "type": "item_group",
     "//": "Tools used for forcing entry into a building",
-    "items": [ [ "boltcutters", 30 ], [ "crowbar", 50 ], [ "hammer_sledge", 20 ], [ "halligan", 10 ] ]
+    "items": [ [ "boltcutters", 30 ], [ "crowbar", 50 ], [ "claw_bar", 25 ], [ "hammer_sledge", 20 ], [ "halligan", 10 ] ]
   },
   {
     "id": "tools_home",
@@ -263,17 +297,22 @@
       [ "whistle", 20 ],
       [ "hand_crank_charger", 15 ],
       [ "flint_steel", 5 ],
+      [ "tinderbox", 2 ],
+      [ "whistle_multitool", 1 ],
       [ "chem_hexamine", 10 ],
       [ "esbit_stove", 15 ],
       [ "mess_tin", 5 ],
       [ "riding_saddle", 3 ],
-      [ "saddlebag", 5 ]
+      [ "saddlebag", 5 ],
+      [ "lifestraw", 3 ],
+      [ "acetylene_machine", 2 ]
     ]
   },
   {
     "id": "tools_tailor",
     "type": "item_group",
     "items": [
+      [ "awl_steel", 60 ],
       [ "needle_curved", 30 ],
       [ "scissors", 1000 ],
       [ "sewing_kit", 120 ],
@@ -284,7 +323,7 @@
   {
     "id": "tools_commercial_tailor",
     "type": "item_group",
-    "items": [ [ "needle_curved", 30 ], [ "scissors", 1000 ], [ "sewing_kit", 10 ], [ "tailors_kit", 120 ] ]
+    "items": [ [ "awl_steel", 150 ], [ "needle_curved", 30 ], [ "scissors", 1000 ], [ "sewing_kit", 10 ], [ "tailors_kit", 120 ] ]
   },
   {
     "type": "item_group",
@@ -322,6 +361,7 @@
       [ "gloves_medical", 5 ],
       [ "mask_dust", 5 ],
       [ "mask_filter", 5 ],
+      [ "gasfilter_s", 5 ],
       [ "glasses_safety", 5 ],
       [ "UPS_off", 3 ],
       [ "microscope", 5 ],
@@ -343,7 +383,48 @@
       [ "syringe", 4 ],
       [ "xacto", 4 ],
       [ "cotton_ball", 4 ],
-      { "group": "ammo_any_batteries_full", "prob": 50 }
+      { "group": "ammo_any_batteries_full", "prob": 50 },
+      [ "acetylene_machine", 1 ]
+    ]
+  },
+  {
+    "type": "item_group",
+    "id": "tools_robotics",
+    "//": "tools and equipment you might find on robotics laboratories.",
+    "items": [
+      [ "recipe_lab_elec", 4 ],
+      [ "UPS_off", 6 ],
+      [ "file", 10 ],
+      [ "atomic_lamp", 1 ],
+      [ "smart_lamp", 2 ],
+      [ "control_laptop", 1 ],
+      [ "bot_manhack", 2 ],
+      [ "teleporter", 1 ],
+      [ "laptop", 4 ],
+      [ "plut_cell", 4 ],
+      [ "superglue", 30 ],
+      [ "pliers", 10 ],
+      [ "matches", 10 ],
+      [ "glasses_safety", 20 ],
+      [ "duct_tape", 8 ],
+      [ "misc_repairkit", 15 ],
+      [ "welder", 10 ],
+      [ "soldering_iron", 8 ],
+      [ "extinguisher", 10 ],
+      [ "magnifying_glass", 10 ],
+      [ "multitool", 20 ],
+      [ "screwdriver_set", 20 ],
+      [ "flashlight", 20 ],
+      [ "mobile_memory_card_science", 40 ],
+      [ "camera_pro", 2 ],
+      [ "element", 5 ],
+      [ "light_battery_cell", 10 ],
+      [ "goggles_welding", 20 ],
+      [ "sm_extinguisher", 10 ],
+      [ "toolbox", 5 ],
+      [ "tool_belt", 10 ],
+      [ "hand_vice", 10 ],
+      [ "wrench", 10 ]
     ]
   },
   {

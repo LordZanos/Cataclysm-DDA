@@ -13,6 +13,36 @@
   },
   {
     "type": "mutation",
+    "id": "BIOLUM1",
+    "name": "Weak Photophore",
+    "points": 1,
+    "description": "A photophore has grown from your head, you can make it glow soflty.  This will make you very visible in the dark, ideal to attract a partner during mating season.",
+    "active": true,
+    "cost": 1,
+    "time": 810000,
+    "hunger": true,
+    "encumbrance_covered": [ [ "HEAD", 5 ] ],
+    "changes_to": [ "BIOLUM2" ],
+    "category": [ "ELFA", "INSECT", "FISH" ],
+    "lumination": [ [ "HEAD", 8 ] ]
+  },
+  {
+    "type": "mutation",
+    "id": "BIOLUM2",
+    "name": "Photophore",
+    "points": 2,
+    "description": "Your can make your photophore glow brightly.",
+    "active": true,
+    "cost": 1,
+    "time": 405000,
+    "hunger": true,
+    "encumbrance_covered": [ [ "HEAD", 5 ] ],
+    "prereqs": [ "BIOLUM1" ],
+    "category": [ "ELFA", "INSECT", "FISH" ],
+    "lumination": [ [ "HEAD", 20 ] ]
+  },
+  {
+    "type": "mutation",
     "id": "GOODHEARING",
     "name": "Good Hearing",
     "points": 1,
@@ -328,6 +358,8 @@
     "name": "Good Memory",
     "points": 3,
     "description": "You have an exceptional memory, and find it easy to remember things.  Your skills will erode slightly slower than usual, and you can remember more terrain.",
+    "map_memory_capacity_multiplier": 2,
+    "skill_rust_multiplier": 0.66,
     "starting_trait": true,
     "valid": false,
     "cancels": [ "FORGETFUL" ]
@@ -477,15 +509,6 @@
   },
   {
     "type": "mutation",
-    "id": "INCONSPICUOUS",
-    "name": "Inconspicuous",
-    "points": 1,
-    "description": "While sleeping or staying still, it is less likely that monsters will wander close to you.",
-    "social_modifiers": { "lie": 2 },
-    "valid": false
-  },
-  {
-    "type": "mutation",
     "id": "MASOCHIST",
     "name": "Masochist",
     "points": 1,
@@ -501,7 +524,7 @@
     "cancels": [ "NONADDICTIVE" ],
     "points": 2,
     "mixed_effect": true,
-    "description": "You have a unique history with stimulants (like coffee or amphetamines). You can tolerate a lot more of them without overdosing, but if you indulge too much, you start seeing things...",
+    "description": "You have a unique history with stimulants (like coffee or amphetamines).  You can tolerate a lot more of them without overdosing, but if you indulge too much, you start seeing things…",
     "starting_trait": true,
     "valid": false
   },
@@ -630,9 +653,27 @@
     "id": "MARTIAL_ARTS5",
     "name": "Melee Weapon Training",
     "points": 3,
-    "description": "You have practiced fighting with weapons.  You start with your choice of Eskrima, Fencing, Pentjak Silat, Medieval Swordsmanship, Niten Ichi-Ryu, or Sōjutsu.",
+    "description": "You have practiced fighting with weapons.  You start with your choice of Eskrima, Fencing, Fior Di Battaglia, Medieval Swordsmanship, Niten Ichi-Ryu, Pentjak Silat, or Sōjutsu.",
     "starting_trait": true,
-    "initial_ma_styles": [ "style_eskrima", "style_fencing", "style_silat", "style_niten", "style_sojutsu", "style_swordsmanship" ],
+    "initial_ma_styles": [
+      "style_eskrima",
+      "style_fencing",
+      "style_silat",
+      "style_niten",
+      "style_sojutsu",
+      "style_swordsmanship",
+      "style_medievalpole"
+    ],
+    "valid": false
+  },
+  {
+    "type": "mutation",
+    "id": "MARTIAL_FENCING",
+    "name": "Competitive Fencer",
+    "points": 0,
+    "description": "You were an avid fencer, starting with foil and moving onto saber, then épée.  You competed nationally and dabbled with some of the historical fencing weapons afforded by HEMA's popularity.",
+    "starting_trait": false,
+    "initial_ma_styles": [ "style_fencing" ],
     "valid": false
   },
   {
@@ -643,6 +684,7 @@
     "description": "Your scent is quite weak.  Animals that track your scent will do so with more difficulty.",
     "starting_trait": true,
     "category": [ "ALPHA" ],
+    "scent_intensity": 300,
     "types": [ "SCENT" ]
   },
   {
@@ -657,36 +699,25 @@
   },
   {
     "type": "mutation",
-    "id": "SAVINGS",
-    "name": "Savings",
-    "points": 1,
-    "description": "You had some money stashed at the bank for a rainy day.  Now that the storm is raging, it's a last call to use it maybe?",
-    "starting_trait": true,
-    "purifiable": false,
-    "valid": false,
-    "cancels": [ "DEBT", "MILLIONAIRE" ]
-  },
-  {
-    "type": "mutation",
-    "id": "DEBT",
-    "name": "Debt",
+    "id": "XS",
+    "name": "Weight: XS",
     "points": -1,
-    "description": "You needed money and had a big loan in a bank.  Good thing nobody will come to collect it now, right?  Right?",
+    "description": "You lost an awful lot of weight before Cataclysm.  Whatever the reason, your skeletal figure is now an extra burden, when food is not at hand's reach.  You need to gain weight or die trying.",
     "starting_trait": true,
     "purifiable": false,
     "valid": false,
-    "cancels": [ "SAVINGS", "MILLIONAIRE" ]
+    "cancels": [ "XXXL" ]
   },
   {
     "type": "mutation",
-    "id": "MILLIONAIRE",
-    "name": "Millionaire",
-    "points": 3,
-    "description": "At the time of Cataclysm you were an owner of a fortune stashed in a bank.  Does that have any meaning now?",
-    "valid": false,
-    "purifiable": false,
+    "id": "XXXL",
+    "name": "Weight: XXXL",
+    "points": -1,
+    "description": "You gained an awful lot of weight before Cataclysm.  Whatever the reason, your bloated figure is now an extra burden, when mobility is a key to survival.  You need to go on a diet or die trying.",
     "starting_trait": true,
-    "cancels": [ "DEBT", "SAVINGS" ]
+    "purifiable": false,
+    "valid": false,
+    "cancels": [ "XS" ]
   },
   {
     "type": "mutation",
@@ -898,9 +929,8 @@
     "id": "VEGETARIAN",
     "name": "Meat Intolerance",
     "points": -2,
-    "description": "You have problems with eating meat.  It's possible for you to eat it, but you will suffer morale penalties due to nausea.",
+    "description": "You have problems with eating meat.  It's possible for you to eat it, but you will suffer morale penalties and obtain less nutrition from it.",
     "starting_trait": true,
-    "//": "Intolerances are presumed a psychological issue unless stated otherwise, and cancelled by digestive mutations, which force the issue.",
     "valid": false,
     "vitamins_absorb_multi": [ [ "flesh", [ [ "vitA", 0 ], [ "vitB", 0 ], [ "vitC", 0 ], [ "calcium", 0 ], [ "iron", 0 ] ] ] ],
     "cancels": [ "CANNIBAL", "MEATARIAN", "ANTIFRUIT" ]
@@ -920,7 +950,7 @@
     "id": "MEATARIAN",
     "name": "Hates Vegetables",
     "points": -2,
-    "description": "You, like many children, hated eating your vegetables; however, you didn't outgrow it.  It's possible for you to eat them, but you will suffer morale penalties due to nausea.",
+    "description": "You have problems with eating vegetables.  It's possible for you to eat them, but you will suffer morale penalties and obtain less nutrition from them.",
     "starting_trait": true,
     "valid": false,
     "vitamins_absorb_multi": [ [ "veggy", [ [ "vitA", 0 ], [ "vitB", 0 ], [ "vitC", 0 ], [ "calcium", 0 ], [ "iron", 0 ] ] ] ],
@@ -941,7 +971,7 @@
     "id": "ANTIFRUIT",
     "name": "Hates Fruit",
     "points": -3,
-    "description": "You despise eating fruits.  It's possible for you to eat them, but you will suffer morale penalties due to nausea.",
+    "description": "You despise eating fruits.  It's possible for you to eat them, but you will suffer morale penalties and obtain less nutrition from them.",
     "starting_trait": true,
     "valid": false,
     "vitamins_absorb_multi": [ [ "fruit", [ [ "vitA", 0 ], [ "vitB", 0 ], [ "vitC", 0 ], [ "calcium", 0 ], [ "iron", 0 ] ] ] ],
@@ -952,8 +982,7 @@
     "id": "LACTOSE",
     "name": "Lactose Intolerance",
     "points": -1,
-    "//": "Actual digestive issue, on even footing with the -vore mutations.",
-    "description": "You, like 75 percent of the world, cannot tolerate milk or milk based products.  It's possible for you to eat them, but you will suffer morale penalties due to nausea.",
+    "description": "You, like 75 percent of the world, cannot tolerate milk or milk based products.  It's possible for you to eat them, but you will suffer morale penalties and obtain less nutrition from them.",
     "vitamins_absorb_multi": [ [ "milk", [ [ "vitA", 0 ], [ "vitB", 0 ], [ "vitC", 0 ], [ "calcium", 0 ], [ "iron", 0 ] ] ] ],
     "starting_trait": true
   },
@@ -962,7 +991,7 @@
     "id": "ANTIJUNK",
     "name": "Junkfood Intolerance",
     "points": -1,
-    "description": "Something in those heavily processed foods doesn't agree with you.  It's possible for you to eat them, but you will suffer morale penalties due to nausea.",
+    "description": "Something in those heavily processed foods doesn't agree with you.  It's possible for you to eat them, but you will suffer morale penalties and obtain less nutrition from them.",
     "starting_trait": true,
     "cancels": [ "PROJUNK" ],
     "vitamins_absorb_multi": [ [ "junk", [ [ "vitA", 0 ], [ "vitB", 0 ], [ "vitC", 0 ], [ "calcium", 0 ], [ "iron", 0 ] ] ] ],
@@ -973,8 +1002,7 @@
     "id": "ANTIWHEAT",
     "name": "Grain Intolerance",
     "points": -2,
-    "//": "Actual digestive issue, on even footing with the -vore mutations.",
-    "description": "You have a rare allergy that prevents you from eating most types of grains such as wheat or oats.  It's possible for you to eat them, but you will suffer morale penalties due to nausea.",
+    "description": "You have a rare allergy that prevents you from eating most types of grains such as wheat or oats.  It's possible for you to eat them, but you will suffer morale penalties and obtain less nutrition from them.",
     "vitamins_absorb_multi": [ [ "wheat", [ [ "vitA", 0 ], [ "vitB", 0 ], [ "vitC", 0 ], [ "calcium", 0 ], [ "iron", 0 ] ] ] ],
     "starting_trait": true
   },
@@ -984,6 +1012,7 @@
     "name": "Sweet Tooth",
     "points": 1,
     "description": "You have a soft spot for processed foods, and gain a morale bonus from eating them.",
+    "starting_trait": true,
     "cancels": [ "ANTIJUNK" ],
     "changes_to": [ "PROJUNK2" ],
     "category": [ "MOUSE", "INSECT" ]
@@ -1018,6 +1047,8 @@
     "points": -3,
     "description": "You have a hard time remembering things.  Your skills will erode slightly faster than usual, and you can remember less terrain.",
     "social_modifiers": { "lie": -5 },
+    "map_memory_capacity_multiplier": 0.5,
+    "skill_rust_multiplier": 1.33,
     "starting_trait": true,
     "category": [ "BEAST", "MEDICAL", "CHIMERA", "MOUSE", "INSECT" ],
     "cancels": [ "GOODMEMORY" ]
@@ -1061,6 +1092,7 @@
     "starting_trait": true,
     "changes_to": [ "SMELLY2" ],
     "types": [ "SCENT" ],
+    "scent_intensity": 800,
     "category": [ "FELINE", "LUPINE", "MOUSE" ]
   },
   {
@@ -1107,7 +1139,7 @@
     "type": "mutation",
     "id": "SCHIZOPHRENIC",
     "name": "Schizophrenic",
-    "points": -2,
+    "points": -3,
     "description": "You will periodically suffer from delusions, ranging from minor effects to full visual hallucinations.  Some of these effects may be controlled through the use of Thorazine.",
     "starting_trait": true,
     "valid": false,
@@ -1362,7 +1394,7 @@
     "id": "ELFAEYES",
     "name": "Fey Eyes",
     "points": 1,
-    "description": "Your eyes have turned...green.  It's tough to tell the exact shade as it seems to shift.  The effect is ...pleasant.",
+    "description": "Your eyes have turned… green.  It's tough to tell the exact shade as it seems to shift.  The effect is… pleasant.",
     "leads_to": [ "ELFA_NV" ],
     "valid": false,
     "cancels": [ "BIRD_EYE", "LIZ_EYE", "FEL_EYE", "URSINE_EYE", "COMPOUND_EYES" ],
@@ -2288,6 +2320,7 @@
     "threshreq": [ "THRESH_PLANT", "THRESH_ELFA" ],
     "category": [ "PLANT", "ELFA" ],
     "changes_to": [ "ROSEBUDS" ],
+    "scent_mask": -200,
     "social_modifiers": { "lie": 10 }
   },
   {
@@ -2507,7 +2540,7 @@
     "id": "MARLOSS",
     "name": "Marloss Carrier",
     "points": 4,
-    "description": "Ever since you ate that Marloss berry, you can't get its scent out of your nose, and you have a strong desire to try some seeds and...sap?",
+    "description": "Ever since you ate that Marloss berry, you can't get its scent out of your nose, and you have a strong desire to try some seeds and… sap?",
     "purifiable": false,
     "valid": false,
     "category": [ "MARLOSS" ],
@@ -2518,7 +2551,7 @@
     "id": "MARLOSS_BLUE",
     "name": "Marloss Vessel",
     "points": 4,
-    "description": "Ever since you ate that Marloss seed, you can't get its taste off of your tongue, and you have a strong desire to try some berries and...sap?",
+    "description": "Ever since you ate that Marloss seed, you can't get its taste off of your tongue, and you have a strong desire to try some berries and… sap?",
     "purifiable": false,
     "valid": false,
     "category": [ "MARLOSS" ],
@@ -2925,7 +2958,7 @@
     "visibility": 10,
     "ugliness": 8,
     "mixed_effect": true,
-    "description": "Your fangs have grown extremely large and incredibly sharp.  They make it impossible to wear mouthgear and difficult to eat...  but leave nasty wounds when you bite.",
+    "description": "Your fangs have grown extremely large and incredibly sharp.  They make it impossible to wear mouthgear and difficult to eat… but leave nasty wounds when you bite.",
     "types": [ "TEETH" ],
     "prereqs": [ "FANGS" ],
     "threshreq": [ "THRESH_FELINE", "THRESH_CHIMERA" ],
@@ -4327,6 +4360,7 @@
     "visibility": 4,
     "ugliness": 5,
     "description": "You smell awful.  Monsters that track scent will find you very easily, and humans will react poorly.",
+    "scent_intensity": 1200,
     "prereqs": [ "SMELLY" ],
     "leads_to": [ "PHEROMONE_INSECT", "PHEROMONE_MAMMAL" ],
     "category": [ "FISH", "BEAST", "SLIME", "CHIMERA", "URSINE" ]
@@ -4412,7 +4446,7 @@
     "points": -1,
     "visibility": 4,
     "ugliness": 3,
-    "description": "Your face and jaw have begun...changing.  Masks and such fit OK, but you're noticeably mutated.",
+    "description": "Your face and jaw have begun… changing.  Masks and such fit OK, but you're noticeably mutated.",
     "changes_to": [ "BEAK", "BEAK_HUM", "BEAK_PECK", "PROBOSCIS", "MINOTAUR", "MUZZLE", "MUZZLE_BEAR", "MUZZLE_LONG", "MUZZLE_RAT" ],
     "category": [ "FELINE" ]
   },
@@ -5192,8 +5226,10 @@
     "points": 2,
     "visibility": 4,
     "ugliness": 5,
-    "//~": "The idea is that you, for lack of a better term, plant yourself.  Crafting and digging don't count because they presume a certain amount of movement during the task.  The handheld game does count.",
-    "description": "It's about time you started developing a root system.  When reading, fishing, waiting, or otherwise being stationary for a while on diggable terrain, you'll extract nutrients and water from the soil.",
+    "description": {
+      "//~": "The idea is that you, for lack of a better term, plant yourself.  Crafting and digging don't count because they presume a certain amount of movement during the task.  The handheld game does count.",
+      "str": "It's about time you started developing a root system.  When reading, fishing, waiting, or otherwise being stationary for a while on diggable terrain, you'll extract nutrients and water from the soil."
+    },
     "types": [ "LEGS" ],
     "prereqs": [ "ROOTS1" ],
     "threshreq": [ "THRESH_PLANT" ],
@@ -5232,6 +5268,7 @@
     "threshreq": [ "THRESH_PLANT" ],
     "cancels": [ "SMELLY", "SMELLY2" ],
     "category": [ "PLANT" ],
+    "scent_type": "sc_flower",
     "encumbrance_covered": [ [ "FOOT_L", 10 ], [ "FOOT_R", 10 ] ]
   },
   {
@@ -5256,7 +5293,7 @@
     "changes_to": [ "COLDBLOOD2" ],
     "types": [ "METABOLISM" ],
     "category": [ "FISH", "CEPHALOPOD", "SPIDER" ],
-    "temperature_speed_modifier": 1,
+    "temperature_speed_modifier": 0.2,
     "metabolism_modifier": -0.333
   },
   {
@@ -5293,7 +5330,7 @@
     "name": "Ectothermic",
     "points": 0,
     "mixed_effect": true,
-    "description": "Your body has become permanently cold-blooded.  Your speed lowers--or raises--for every 2 (1.1) degrees below or above 65 F (18.3 C).  You only need to eat half as much as an average human.",
+    "description": "Your body has become permanently cold-blooded.  Your speed lowers or raises 1% for every 2 (1.1) degrees below or above 65 F (18.3 C).  You only need to eat half as much as an average human.",
     "prereqs": [ "COLDBLOOD3" ],
     "threshreq": [ "THRESH_LIZARD", "THRESH_PLANT" ],
     "purifiable": false,
@@ -5725,7 +5762,7 @@
     "id": "THRESH_INSECT",
     "name": "Insect",
     "points": 1,
-    "description": "It would be good to be a Queen, having workers constantly servicing your every need...but how would you keep them in line?",
+    "description": "It would be good to be a Queen, having workers constantly servicing your every need… but how would you keep them in line?",
     "valid": false,
     "purifiable": false,
     "threshold": true
@@ -5745,7 +5782,7 @@
     "id": "THRESH_SLIME",
     "name": "Aqueous",
     "points": 1,
-    "description": "What was that old advertisement, 'paint the planet'? That might be a good long-term goal, but for now...",
+    "description": "What was that old advertisement, 'paint the planet'?  That might be a good long-term goal, but for now…",
     "valid": false,
     "purifiable": false,
     "threshold": true
@@ -6083,7 +6120,25 @@
     "points": 0,
     "description": "You were shaping up to be a pretty decent student of the martial arts before the Cataclysm struck.  Time to see just how good you really are.",
     "valid": false,
-    "initial_ma_styles": [ "style_karate", "style_judo", "style_muay_thai", "style_tai_chi", "style_taekwondo" ],
+    "initial_ma_styles": [
+      "style_aikido",
+      "style_capoeira",
+      "style_crane",
+      "style_dragon",
+      "style_judo",
+      "style_karate",
+      "style_krav_maga",
+      "style_leopard",
+      "style_muay_thai",
+      "style_ninjutsu",
+      "style_pankration",
+      "style_snake",
+      "style_taekwondo",
+      "style_tai_chi",
+      "style_tiger",
+      "style_wingchun",
+      "style_zui_quan"
+    ],
     "purifiable": false,
     "profession": true
   },
@@ -6094,13 +6149,23 @@
     "points": 0,
     "description": "You were competitive at national levels, and had considered teaching your art.  Defending against the entire town may still be a challenge, though.",
     "initial_ma_styles": [
-      "style_karate",
-      "style_judo",
       "style_aikido",
-      "style_tai_chi",
+      "style_capoeira",
+      "style_crane",
+      "style_dragon",
+      "style_judo",
+      "style_karate",
+      "style_krav_maga",
+      "style_leopard",
+      "style_muay_thai",
+      "style_ninjutsu",
+      "style_pankration",
+      "style_snake",
       "style_taekwondo",
-      "style_zui_quan",
-      "style_muay_thai"
+      "style_tai_chi",
+      "style_tiger",
+      "style_wingchun",
+      "style_zui_quan"
     ],
     "valid": false,
     "purifiable": false,
@@ -6231,7 +6296,7 @@
   {
     "type": "mutation",
     "id": "DEBUG_NIGHTVISION",
-    "name": "Debug Vision",
+    "name": "Debug Night Vision",
     "points": 99,
     "valid": false,
     "description": "You can clearly see that this is for dev purposes only.",
@@ -6402,5 +6467,14 @@
     "description": "Spending any amount of time in familiar places makes you miserable.  Must.  Keep.  Moving.",
     "prereqs": [ "NOMAD2" ],
     "category": [ "CHIMERA" ]
+  },
+  {
+    "type": "mutation",
+    "id": "WAYFARER",
+    "name": "Wayfarer",
+    "points": -8,
+    "description": "Whether from personal choice or childhood trauma, travelling with vehicles is off-limits to you, even if your life depended on it.",
+    "starting_trait": true,
+    "valid": false
   }
 ]
