@@ -750,7 +750,20 @@ void avatar::do_read( item &book )
     std::set<std::string> little_learned;
     std::set<std::string> cant_learn;
     std::list<std::string> out_of_chapters;
-
+    for (auto const & elem : reading->recipes) {
+        auto const r = elem.recipe;
+        if (knows_recipe(r)) {
+            continue;
+        }
+        if (!r->skill_used || get_skill_level(r->skill_used) >= elem.skill_level) {
+            if (!r->skill_used ||
+                rng(0, 4) <= (get_skill_level(r->skill_used) - elem.skill_level) / 2) {
+                learn_recipe(r);
+                add_msg(m_good, _("Learned a recipe for %1$s from the %2$s."),
+                    item::nname(r->result()).c_str(), book.type_name());
+            }
+        }
+    }
     for( auto &elem : learners ) {
         player *learner = elem.first;
 
