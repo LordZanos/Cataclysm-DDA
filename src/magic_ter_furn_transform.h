@@ -1,6 +1,6 @@
 #pragma once
-#ifndef MAGIC_TER_FURN_TRANSFORM_H
-#define MAGIC_TER_FURN_TRANSFORM_H
+#ifndef CATA_SRC_MAGIC_TER_FURN_TRANSFORM_H
+#define CATA_SRC_MAGIC_TER_FURN_TRANSFORM_H
 
 #include <map>
 #include <vector>
@@ -21,7 +21,7 @@ class ter_furn_data
     private:
         weighted_int_list<T> list;
         std::string message;
-        bool message_good;
+        bool message_good = false;
     public:
         ter_furn_data() = default;
         ter_furn_data( const weighted_int_list<T> &list, const std::string &message,
@@ -83,4 +83,4 @@ class ter_furn_transform
         bool is_valid() const;
 };
 
-#endif
+#endif // CATA_SRC_MAGIC_TER_FURN_TRANSFORM_H

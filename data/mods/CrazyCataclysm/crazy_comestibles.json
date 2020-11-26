@@ -3,7 +3,7 @@
     "copy-from": "cookies",
     "type": "COMESTIBLE",
     "id": "sporeos",
-    "name": "SpOreos",
+    "name": { "str_sp": "SpOreos" },
     "color": "dark_gray",
     "spoils_in": 0,
     "symbol": "%",
@@ -19,6 +19,7 @@
   },
   {
     "type": "recipe",
+    "activity_level": "fake",
     "result": "sporeos",
     "category": "CC_FOOD",
     "subcategory": "CSC_FOOD_SNACK",

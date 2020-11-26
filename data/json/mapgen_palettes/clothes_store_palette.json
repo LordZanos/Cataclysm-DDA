@@ -2,8 +2,9 @@
   {
     "type": "palette",
     "id": "clothes_store_palette",
-    "terrain": { "%": "t_console_broken", "p": [ [ "t_grass", 10 ], [ "t_dirt", 2 ] ] },
+    "terrain": { "p": "t_region_groundcover_urban" },
     "furniture": {
+      "%": "f_console_broken",
       "c": "f_counter",
       "C": "f_armchair",
       "s": "f_stool",
@@ -24,7 +25,7 @@
       "l": "f_locker",
       "b": "f_bigmirror",
       "y": [ "f_indoor_plant", "f_indoor_plant_y" ],
-      "p": [ "f_datura", "f_bluebell", "f_mutpoppy", "f_dahlia", "f_flower_tulip", "f_chamomile", "f_flower_spurge", "f_lily" ],
+      "p": "f_region_flower",
       "D": "f_trashcan",
       "&": "f_mannequin",
       "(": "f_mannequin",
@@ -58,14 +59,9 @@
   {
     "type": "palette",
     "id": "tailor_palette",
-    "terrain": {
-      "%": "t_console_broken",
-      ";": "t_door_locked",
-      "0": "t_window_alarm",
-      "z": "t_shrub",
-      "p": [ [ "t_grass", 10 ], [ "t_dirt", 2 ] ]
-    },
+    "terrain": { ";": "t_door_locked", "0": "t_window_alarm", "z": "t_region_shrub_decorative", "p": "t_region_groundcover_urban" },
     "furniture": {
+      "%": "f_console_broken",
       "c": "f_counter",
       "R": "f_clothing_rail",
       "s": "f_stool",
@@ -76,7 +72,7 @@
       "&": "f_mannequin",
       "@": "f_mannequin",
       "h": "f_chair",
-      "p": [ "f_datura", "f_bluebell", "f_mutpoppy", "f_dahlia", "f_flower_tulip", "f_chamomile", "f_flower_spurge", "f_lily" ],
+      "p": "f_region_flower",
       "]": "f_bookcase",
       "f": "f_cupboard",
       "L": "f_locker"
@@ -99,14 +95,14 @@
     "type": "palette",
     "id": "furs_palette",
     "terrain": {
-      "%": "t_console_broken",
       ";": "t_door_locked",
       "i": "t_door_locked_interior",
       "0": "t_window_alarm",
-      "z": "t_shrub",
-      "p": [ [ "t_grass", 10 ], [ "t_dirt", 2 ] ]
+      "z": "t_region_shrub_decorative",
+      "p": "t_region_groundcover_urban"
     },
     "furniture": {
+      "%": "f_console_broken",
       "c": "f_displaycase",
       "s": "f_stool",
       "d": "f_desk",
@@ -115,7 +111,7 @@
       "y": [ "f_indoor_plant", "f_indoor_plant_y" ],
       "&": "f_mannequin",
       "h": "f_chair",
-      "p": [ "f_datura", "f_bluebell", "f_mutpoppy", "f_dahlia", "f_flower_tulip", "f_chamomile", "f_flower_spurge", "f_lily" ],
+      "p": "f_region_flower",
       "A": "f_statue",
       "L": "f_locker",
       "J": "f_locker"

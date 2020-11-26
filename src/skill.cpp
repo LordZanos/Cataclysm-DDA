@@ -1,18 +1,20 @@
 #include "skill.h"
 
-#include <cstddef>
 #include <algorithm>
-#include <iterator>
 #include <array>
+#include <cstddef>
+#include <iterator>
 #include <memory>
 #include <utility>
 
+#include "cata_utility.h"
 #include "debug.h"
 #include "item.h"
 #include "json.h"
 #include "options.h"
 #include "recipe.h"
 #include "rng.h"
+#include "string_id.h"
 #include "translations.h"
 
 // TODO: a map, for Barry's sake make this a map.
@@ -68,9 +70,11 @@ std::vector<const Skill *> Skill::get_skills_sorted_by(
     std::vector<const Skill *> result;
     result.reserve( skills.size() );
 
-    std::transform( begin( skills ), end( skills ), back_inserter( result ), []( const Skill & s ) {
-        return &s;
-    } );
+    for( const Skill &sk : skills ) {
+        if( !sk.obsolete() ) {
+            result.push_back( &sk );
+        }
+    }
 
     std::sort( begin( result ), end( result ), [&]( const Skill * lhs, const Skill * rhs ) {
         return pred( *lhs, *rhs );
@@ -87,7 +91,9 @@ void Skill::reset()
 
 void Skill::load_skill( const JsonObject &jsobj )
 {
-    skill_id ident = skill_id( jsobj.get_string( "ident" ) );
+    // TEMPORARY until 0.G: Remove "ident" support
+    skill_id ident = skill_id( jsobj.has_string( "ident" ) ? jsobj.get_string( "ident" ) :
+                               jsobj.get_string( "id" ) );
     skills.erase( std::remove_if( begin( skills ), end( skills ), [&]( const Skill & s ) {
         return s._ident == ident;
     } ), end( skills ) );
@@ -115,6 +121,7 @@ void Skill::load_skill( const JsonObject &jsobj )
     sk._companion_survival_rank_factor = jsobj.get_int( "companion_survival_rank_factor", 0 );
     sk._companion_industry_rank_factor = jsobj.get_int( "companion_industry_rank_factor", 0 );
     sk._companion_skill_practice = companion_skill_practice;
+    sk._obsolete = jsobj.get_bool( "obsolete", false );
 
     if( sk.is_contextual_skill() ) {
         contextual_skills[sk.ident()] = sk;
@@ -136,7 +143,10 @@ SkillDisplayType::SkillDisplayType( const skill_displayType_id &ident,
 
 void SkillDisplayType::load( const JsonObject &jsobj )
 {
-    skill_displayType_id ident = skill_displayType_id( jsobj.get_string( "ident" ) );
+    // TEMPORARY until 0.G: Remove "ident" support
+    skill_displayType_id ident = skill_displayType_id(
+                                     jsobj.has_string( "ident" ) ? jsobj.get_string( "ident" ) :
+                                     jsobj.get_string( "id" ) );
     skillTypes.erase( std::remove_if( begin( skillTypes ),
     end( skillTypes ), [&]( const SkillDisplayType & s ) {
         return s._ident == ident;
@@ -148,7 +158,7 @@ void SkillDisplayType::load( const JsonObject &jsobj )
     skillTypes.push_back( sk );
 }
 
-const SkillDisplayType &SkillDisplayType::get_skill_type( skill_displayType_id id )
+const SkillDisplayType &SkillDisplayType::get_skill_type( const skill_displayType_id &id )
 {
     for( auto &i : skillTypes ) {
         if( i._ident == id ) {
@@ -166,7 +176,7 @@ skill_id Skill::from_legacy_int( const int legacy_id )
             skill_id( "gun" ), skill_id( "pistol" ), skill_id( "shotgun" ), skill_id( "smg" ),
             skill_id( "rifle" ), skill_id( "archery" ), skill_id( "launcher" ), skill_id( "mechanics" ),
             skill_id( "electronics" ), skill_id( "cooking" ), skill_id( "tailor" ), skill_id::NULL_ID(),
-            skill_id( "firstaid" ), skill_id( "speech" ), skill_id( "barter" ), skill_id( "computer" ),
+            skill_id( "firstaid" ), skill_id( "speech" ), skill_id( "computer" ),
             skill_id( "survival" ), skill_id( "traps" ), skill_id( "swimming" ), skill_id( "driving" ),
         }
     };
@@ -185,12 +195,14 @@ skill_id Skill::random_skill()
 // used for the pacifist trait
 bool Skill::is_combat_skill() const
 {
-    return _tags.count( "combat_skill" ) > 0;
+    static const std::string combat_skill( "combat_skill" );
+    return _tags.count( combat_skill ) > 0;
 }
 
 bool Skill::is_contextual_skill() const
 {
-    return _tags.count( "contextual_skill" ) > 0;
+    static const std::string contextual_skill( "contextual_skill" );
+    return _tags.count( contextual_skill ) > 0;
 }
 
 void SkillLevel::train( int amount, bool skip_scaling )
@@ -224,12 +236,12 @@ time_duration rustRate( int level )
 {
     // for n = [0, 7]
     //
-    // 2^15
+    // 2^18
     // -------
-    // 2^(n-1)
+    // 2^(18-n)
 
-    unsigned const n = level < 0 ? 0 : level > 7 ? 7 : level;
-    return time_duration::from_turns( 1 << ( 15 - n + 1 ) );
+    unsigned const n = clamp( level, 0, 7 );
+    return time_duration::from_turns( 1 << ( 18 - n ) );
 }
 } //namespace
 
@@ -239,10 +251,13 @@ bool SkillLevel::isRusting() const
            calendar::turn - _lastPracticed > rustRate( _level );
 }
 
-bool SkillLevel::rust( bool charged_bio_mem )
+bool SkillLevel::rust( bool charged_bio_mem, int character_rate )
 {
     const time_duration delta = calendar::turn - _lastPracticed;
-    if( _level <= 0 || delta <= 0_turns || delta % rustRate( _level ) != 0_turns ) {
+    const float char_rate = character_rate / 100.0f;
+    const time_duration skill_rate = rustRate( _level );
+    if( to_turns<int>( skill_rate ) * char_rate <= 0 || delta <= 0_turns ||
+        delta % ( skill_rate * char_rate ) != 0_turns ) {
         return false;
     }
 
@@ -251,7 +266,7 @@ bool SkillLevel::rust( bool charged_bio_mem )
     }
 
     _exercise -= _level;
-    const auto &rust_type = get_option<std::string>( "SKILL_RUST" );
+    const std::string &rust_type = get_option<std::string>( "SKILL_RUST" );
     if( _exercise < 0 ) {
         if( rust_type == "vanilla" || rust_type == "int" ) {
             _exercise = ( 100 * _level * _level ) - 1;
@@ -379,7 +394,7 @@ bool SkillLevelMap::has_recipe_requirements( const recipe &rec ) const
     return exceeds_recipe_requirements( rec ) >= 0;
 }
 
-// Actually take the difference in barter skill between the two parties involved
+// Actually take the difference in social skill between the two parties involved
 // Caps at 200% when you are 5 levels ahead, int comparison is handled in npctalk.cpp
 double price_adjustment( int barter_skill )
 {

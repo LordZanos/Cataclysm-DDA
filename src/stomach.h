@@ -1,14 +1,18 @@
 #pragma once
+#ifndef CATA_SRC_STOMACH_H
+#define CATA_SRC_STOMACH_H
 
 #include <map>
 
+#include "calendar.h"
 #include "type_id.h"
 #include "units.h"
+#include "units_fwd.h"
 
-struct needs_rates;
+class Character;
 class JsonIn;
 class JsonOut;
-class item;
+struct needs_rates;
 
 // Separate struct for nutrients so that we can easily perform arithmetic on
 // them
@@ -57,12 +61,12 @@ struct food_summary {
 // how much a stomach_contents can digest
 // based on 30 minute increments
 struct stomach_digest_rates {
-    units::volume solids;
-    units::volume water;
-    float percent_kcal;
-    int min_kcal;
-    float percent_vitamin;
-    int min_vitamin;
+    units::volume solids = 0_ml;
+    units::volume water = 0_ml;
+    float percent_kcal = 0.0f;
+    int min_kcal = 0;
+    float percent_vitamin = 0.0f;
+    int min_vitamin = 0;
 };
 
 // an abstract of food that has been eaten.
@@ -129,12 +133,12 @@ class stomach_contents
         void mod_nutr( int nutr );
         // changes water amount in stomach
         // overflow draws from player thirst
-        void mod_water( units::volume h2o );
+        void mod_water( const units::volume &h2o );
         // changes water amount in stomach converted from quench value
         // TODO: Move to mL values of water
         void mod_quench( int quench );
         // adds volume to your stomach
-        void mod_contents( units::volume vol );
+        void mod_contents( const units::volume &vol );
 
         // how long has it been since i ate?
         // only really relevant for player::stomach
@@ -148,25 +152,27 @@ class stomach_contents
     private:
 
         // If true, this object represents a stomach; if false, this object represents guts.
-        bool stomach;
+        bool stomach = false;
 
         // nutrients (calories and vitamins)
         nutrients nutr;
         // volume of water in stomach_contents
-        units::volume water;
+        units::volume water = 0_ml;
         /**
         * this is the maximum volume without modifiers such as mutations
         * in order to get the maximum volume with all modifiers properly,
         * call stomach_capacity()
         */
-        units::volume max_volume;
+        units::volume max_volume = 0_ml;
         // volume of food in stomach_contents
-        units::volume contents;
+        units::volume contents = 0_ml;
         // when did this stomach_contents call stomach_contents::ingest()
-        time_point last_ate;
+        time_point last_ate = calendar::turn_zero;
 
         // Gets the rates at which this stomach will digest things.
         stomach_digest_rates get_digest_rates( const needs_rates &metabolic_rates,
                                                const Character &owner );
 
 };
+
+#endif // CATA_SRC_STOMACH_H

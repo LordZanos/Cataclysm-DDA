@@ -14,7 +14,7 @@
   {
     "type": "npc_class",
     "id": "NC_REFUGEE_Mangalpreet",
-    "name": "Refugee",
+    "name": { "str": "Refugee" },
     "job_description": "I'm just trying to survive.",
     "common": false,
     "//": "Mangalpreet is the mother of a small family.  They've made it through this unscathed and have a lot of survivor's guilt.",
@@ -69,6 +69,18 @@
     "//": "common talk responses",
     "id": [ "TALK_REFUGEE_Mangalpreet_2", "TALK_REFUGEE_Mangalpreet_Background", "TALK_REFUGEE_Mangalpreet_Situation" ],
     "responses": [
+      {
+        "text": "I'm trying to put a cleanup crew together to tidy up the back room.  Can you help?",
+        "condition": {
+          "and": [
+            { "u_has_mission": "MISSION_REFUGEE_Boris_CLEANUP" },
+            {
+              "not": { "npc_has_var": "cleanup_asked", "type": "mission", "context": "Boris_mission_1", "value": "yes" }
+            }
+          ]
+        },
+        "topic": "TALK_REFUGEE_Refuse_Boris_Mission_1"
+      },
       { "text": "What's your story?", "topic": "TALK_REFUGEE_Mangalpreet_Background" },
       { "text": "How are things here?", "topic": "TALK_REFUGEE_Mangalpreet_Situation" }
     ]
@@ -114,7 +126,7 @@
     "id": "TALK_REFUGEE_Mangalpreet_1_firstmeet",
     "dynamic_line": "Yes, I'm glad to meet you too.  Will you be staying with us?  I thought they were taking no more refugees.",
     "responses": [
-      { "text": "I'm a traveller actually.  Just saying hello.", "topic": "TALK_REFUGEE_Mangalpreet_2" },
+      { "text": "I'm a traveler actually.  Just saying hello.", "topic": "TALK_REFUGEE_Mangalpreet_2" },
       { "text": "Actually I'm just heading out.", "topic": "TALK_DONE" }
     ]
   },

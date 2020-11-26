@@ -1,29 +1,35 @@
 #pragma once
-#ifndef OUTPUT_H
-#define OUTPUT_H
+#ifndef CATA_SRC_OUTPUT_H
+#define CATA_SRC_OUTPUT_H
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <string>
-#include <vector>
-#include <algorithm>
+#include <forward_list>
+#include <functional>
 #include <iterator>
 #include <locale>
+#include <map>
+#include <string>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
+#include "cata_assert.h"
 #include "catacharset.h"
 #include "color.h"
+#include "debug.h"
 #include "enums.h"
-#include "player.h"
+#include "item.h"
+#include "line.h"
+#include "optional.h"
+#include "point.h"
 #include "string_formatter.h"
 #include "translations.h"
-#include "units.h"
-#include "debug.h"
+#include "units_fwd.h"
 
 struct input_event;
-struct iteminfo;
 
-enum direction : unsigned;
 namespace catacurses
 {
 class window;
@@ -120,7 +126,6 @@ inline std::string string_from_int( const catacurses::chtype ch )
             charcode = LINE_XXXX_C;
             break;
         default:
-            charcode = ch;
             break;
     }
     char buffer[2] = { static_cast<char>( charcode ), '\0' };
@@ -135,8 +140,6 @@ extern int TERMX; // width available for display
 extern int TERMY; // height available for display
 extern int POSX; // X position of '@' inside terrain window
 extern int POSY; // Y position of '@' inside terrain window
-extern int VIEW_OFFSET_X; // X position of terrain window
-extern int VIEW_OFFSET_Y; // Y position of terrain window
 extern int TERRAIN_WINDOW_WIDTH; // width of terrain window
 extern int TERRAIN_WINDOW_HEIGHT; // height of terrain window
 extern int TERRAIN_WINDOW_TERM_WIDTH; // width of terrain window in terminal characters
@@ -310,6 +313,7 @@ inline int fold_and_print_from( const catacurses::window &w, const point &begin,
  */
 void trim_and_print( const catacurses::window &w, const point &begin, int width,
                      nc_color base_color, const std::string &text );
+std::string trim_by_length( const std::string &text, int width );
 template<typename ...Args>
 inline void trim_and_print( const catacurses::window &w, const point &begin,
                             const int width, const nc_color base_color, const char *const mes, Args &&... args )
@@ -321,10 +325,12 @@ void center_print( const catacurses::window &w, int y, const nc_color &FG,
                    const std::string &text );
 int right_print( const catacurses::window &w, int line, int right_indent,
                  const nc_color &FG, const std::string &text );
-void display_table( const catacurses::window &w, const std::string &title, int columns,
-                    const std::vector<std::string> &data );
-void scrollable_text( const catacurses::window &w, const std::string &title,
-                      const std::string &text );
+void insert_table( const catacurses::window &w, int pad, int line, int columns,
+                   const nc_color &FG, const std::string &divider, bool r_align,
+                   const std::vector<std::string> &data );
+std::string satiety_bar( int calpereffv );
+void scrollable_text( const std::function<catacurses::window()> &init_window,
+                      const std::string &title, const std::string &text );
 std::string name_and_value( const std::string &name, int value, int field_width );
 std::string name_and_value( const std::string &name, const std::string &value, int field_width );
 
@@ -361,10 +367,51 @@ void draw_custom_border(
     const catacurses::window &w, catacurses::chtype ls = 1, catacurses::chtype rs = 1,
     catacurses::chtype ts = 1, catacurses::chtype bs = 1, catacurses::chtype tl = 1,
     catacurses::chtype tr = 1, catacurses::chtype bl = 1, catacurses::chtype br = 1,
-    nc_color FG = BORDER_COLOR, const point &pos = point_zero, int height = 0, int width = 0 );
+    const nc_color &FG = BORDER_COLOR, const point &pos = point_zero, int height = 0, int width = 0 );
 void draw_border( const catacurses::window &w, nc_color border_color = BORDER_COLOR,
                   const std::string &title = "", nc_color title_color = c_light_red );
 void draw_border_below_tabs( const catacurses::window &w, nc_color border_color = BORDER_COLOR );
+
+class border_helper
+{
+    public:
+        class border_info
+        {
+            public:
+                void set( const point &pos, const point &size );
+
+                // Prevent accidentally copying the return value from border_helper::add_border
+                border_info( const border_info & ) = delete;
+                border_info( border_info && ) = default;
+                border_info &operator=( const border_info & ) = delete;
+                border_info &operator=( border_info && ) = default;
+
+                friend class border_helper;
+            private:
+                border_info( border_helper &helper );
+
+                point pos;
+                point size;
+                std::reference_wrapper<border_helper> helper;
+        };
+
+        border_info &add_border();
+        void draw_border( const catacurses::window &win );
+
+        friend class border_info;
+    private:
+        struct border_connection {
+            bool top = false;
+            bool right = false;
+            bool bottom = false;
+            bool left = false;
+
+            int as_curses_line() const;
+        };
+        cata::optional<std::map<point, border_connection>> border_connection_map;
+
+        std::forward_list<border_info> border_info_list;
+};
 
 std::string word_rewrap( const std::string &ins, int width, uint32_t split = ' ' );
 std::vector<size_t> get_tag_positions( const std::string &s );
@@ -400,10 +447,6 @@ std::vector<std::string> get_hotkeys( const std::string &s );
  * - PF_GET_KEY (ignored when combined with PF_NO_WAIT) cancels the popup on *any* user input.
  *   Without the flag the popup is only canceled when the user enters new-line, Space and Escape.
  *   This flag is passed by @ref popup_getkey.
- * - PF_NO_WAIT displays the popup, but does not wait for the user input. The popup window is
- *   immediately destroyed (but will be visible until another window is redrawn over it).
- *   The function always returns 0 upon this flag, no call to `getch` is done at all.
- *   This flag is passed by @ref popup_nowait.
  * - PF_ON_TOP makes the window appear on the top of the screen (at the upper most row). Without
  *   this flag, the popup is centered on the screen.
  *   The flag is passed by @ref popup_top.
@@ -416,10 +459,8 @@ std::vector<std::string> get_hotkeys( const std::string &s );
 enum PopupFlags {
     PF_NONE        = 0,
     PF_GET_KEY     = 1 << 0,
-    PF_NO_WAIT     = 1 << 1,
     PF_ON_TOP      = 1 << 2,
     PF_FULLSCREEN  = 1 << 3,
-    PF_NO_WAIT_ON_TOP = PF_NO_WAIT | PF_ON_TOP,
 };
 
 template<typename ...Args>
@@ -433,17 +474,6 @@ inline void popup_top( const char *const mes, Args &&... args )
     popup( string_format( mes, std::forward<Args>( args )... ), PF_ON_TOP );
 }
 template<typename ...Args>
-inline void popup_nowait( const char *mes, Args &&... args )
-{
-    popup( string_format( mes, std::forward<Args>( args )... ), PF_NO_WAIT );
-}
-void popup_status( const char *title, const std::string &mes );
-template<typename ...Args>
-inline void popup_status( const char *const title, const char *const fmt, Args &&... args )
-{
-    return popup_status( title, string_format( fmt, std::forward<Args>( args )... ) );
-}
-template<typename ...Args>
 inline void popup( const char *mes, Args &&... args )
 {
     popup( string_format( mes, std::forward<Args>( args )... ), PF_NONE );
@@ -453,16 +483,6 @@ template<typename ...Args>
 inline void full_screen_popup( const char *mes, Args &&... args )
 {
     popup( string_format( mes, std::forward<Args>( args )... ), PF_FULLSCREEN );
-}
-template<typename ...Args>
-inline void popup_player_or_npc( player &p, const char *player_mes, const char *npc_mes,
-                                 Args &&... args )
-{
-    if( p.is_player() ) {
-        popup( player_mes, std::forward<Args>( args )... );
-    } else {
-        popup( p.replace_with_npc_name( string_format( npc_mes, std::forward<Args>( args )... ) ) );
-    }
 }
 
 /*@}*/
@@ -485,8 +505,7 @@ struct item_info_data {
         item_info_data( const std::string &sItemName, const std::string &sTypeName,
                         const std::vector<iteminfo> &vItemDisplay, const std::vector<iteminfo> &vItemCompare )
             : sItemName( sItemName ), sTypeName( sTypeName ),
-              vItemDisplay( vItemDisplay ), vItemCompare( vItemCompare ),
-              selected( 0 ), ptr_selected( &selected ) {}
+              vItemDisplay( vItemDisplay ), vItemCompare( vItemCompare ) {}
 
         item_info_data( const std::string &sItemName, const std::string &sTypeName,
                         const std::vector<iteminfo> &vItemDisplay, const std::vector<iteminfo> &vItemCompare,
@@ -512,6 +531,7 @@ struct item_info_data {
         bool without_getch = false;
         bool without_border = false;
         bool handle_scrolling = false;
+        bool any_input = true;
         bool scrollbar_left = true;
         bool use_full_win = false;
         unsigned int padding = 1;
@@ -520,6 +540,9 @@ struct item_info_data {
 input_event draw_item_info( const catacurses::window &win, item_info_data &data );
 
 input_event draw_item_info( int iLeft, int iWidth, int iTop, int iHeight, item_info_data &data );
+
+input_event draw_item_info( const std::function<catacurses::window()> &init_window,
+                            item_info_data &data );
 
 enum class item_filter_type : int {
     FIRST = 1, // used for indexing into tables
@@ -567,10 +590,6 @@ size_t shortcut_print( const catacurses::window &w, nc_color text_color, nc_colo
                        const std::string &fmt );
 std::string shortcut_text( nc_color shortcut_color, const std::string &fmt );
 
-// short visual animation (player, monster, ...) (hit, dodge, ...)
-// cTile is a UTF-8 strings, and must be a single cell wide!
-void hit_animation( const point &p, nc_color cColor, const std::string &cTile );
-
 /**
  * @return Pair of a string containing the bar, and its color
  * @param cur Current value being formatted
@@ -578,8 +597,6 @@ void hit_animation( const point &p, nc_color cColor, const std::string &cTile );
  * @param extra_resolution Double the resolution of displayed values with \ symbols.
  * @param colors A vector containing N colors with which to color the bar at different values
  */
-// The last color is used for an empty bar
-// extra_resolution
 std::pair<std::string, nc_color> get_bar( float cur, float max, int width = 5,
         bool extra_resolution = true,
         const std::vector<nc_color> &colors = { c_green, c_light_green, c_yellow, c_light_red, c_red } );
@@ -637,7 +654,7 @@ inline std::string get_labeled_bar( const double val, const int width, const std
     return result;
 }
 
-enum class enumeration_conjunction {
+enum class enumeration_conjunction : int {
     none,
     and_,
     or_
@@ -688,7 +705,7 @@ std::string enumerate_as_string( const _Container &values,
  * @param conj Choose how to separate the last elements.
  */
 template<typename _FIter, typename F>
-std::string enumerate_as_string( _FIter first, _FIter last, F string_for,
+std::string enumerate_as_string( _FIter first, _FIter last, F &&string_for,
                                  enumeration_conjunction conj = enumeration_conjunction::and_ )
 {
     std::vector<std::string> values;
@@ -700,6 +717,13 @@ std::string enumerate_as_string( _FIter first, _FIter last, F string_for,
         }
     }
     return enumerate_as_string( values, conj );
+}
+
+template<typename Container, typename F>
+std::string enumerate_as_string( const Container &cont, F &&string_for,
+                                 enumeration_conjunction conj = enumeration_conjunction::and_ )
+{
+    return enumerate_as_string( cont.begin(), cont.end(), std::forward<F>( string_for ), conj );
 }
 
 /**
@@ -755,7 +779,7 @@ void draw_tabs( const catacurses::window &w, const TabList &tab_list,
     [&current_tab]( const typename TabList::value_type & pair ) {
         return pair.first == current_tab;
     } );
-    assert( current_tab_it != tab_list.end() );
+    cata_assert( current_tab_it != tab_list.end() );
     draw_tabs( w, tab_text, std::distance( tab_list.begin(), current_tab_it ) );
 }
 
@@ -770,7 +794,7 @@ void draw_tabs( const catacurses::window &w, const TabList &tab_list, const TabK
     std::vector<typename TabList::value_type> ordered_tab_list;
     for( const auto &key : keys ) {
         auto it = tab_list.find( key );
-        assert( it != tab_list.end() );
+        cata_assert( it != tab_list.end() );
         ordered_tab_list.push_back( *it );
     }
     draw_tabs( w, ordered_tab_list, current_tab );
@@ -824,7 +848,7 @@ class scrollbar
 // Update the text with set_text (it will be wrapped for you).
 // scroll_up and scroll_down are expected to be called from handlers for the
 // keys used for that purpose.
-// Call draw when drawing related UI stuff.  draw calls werase/wrefresh for its
+// Call draw when drawing related UI stuff.  draw calls werase/wnoutrefresh for its
 // window internally.
 class scrolling_text_view
 {
@@ -834,6 +858,8 @@ class scrolling_text_view
         void set_text( const std::string & );
         void scroll_up();
         void scroll_down();
+        void page_up();
+        void page_down();
         void draw( const nc_color &base_color );
     private:
         int text_width();
@@ -857,7 +883,14 @@ class scrollingcombattext
             private:
                 point pos;
                 direction oDir;
-                direction oUp, oUpRight, oRight, oDownRight, oDown, oDownLeft, oLeft, oUpLeft;
+                direction oUp;
+                direction oUpRight;
+                direction oRight;
+                direction oDownRight;
+                direction oDown;
+                direction oDownLeft;
+                direction oLeft;
+                direction oUpLeft;
                 point dir;
                 int iStep;
                 int iStepOffset;
@@ -1001,4 +1034,4 @@ std::string colorize_symbols( const std::string &str, F color_of )
     return res;
 }
 
-#endif
+#endif // CATA_SRC_OUTPUT_H

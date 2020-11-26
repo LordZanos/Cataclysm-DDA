@@ -1,11 +1,12 @@
 #pragma once
-#ifndef EMIT_H
-#define EMIT_H
+#ifndef CATA_SRC_EMIT_H
+#define CATA_SRC_EMIT_H
 
 #include <map>
 #include <string>
 
 #include "field_type.h"
+#include "int_id.h"
 #include "string_id.h"
 #include "type_id.h"
 
@@ -63,7 +64,7 @@ class emit
 
     private:
         emit_id id_;
-        field_type_id field_ = fd_null;
+        field_type_id field_ = fd_null.id_or( INVALID_FIELD_TYPE_ID );
         int intensity_ = 1;
         int qty_ = 1;
         int chance_ = 100;
@@ -72,4 +73,4 @@ class emit
         std::string field_name;
 };
 
-#endif
+#endif // CATA_SRC_EMIT_H

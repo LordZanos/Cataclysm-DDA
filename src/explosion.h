@@ -1,26 +1,27 @@
 #pragma once
-#ifndef EXPLOSION_H
-#define EXPLOSION_H
+#ifndef CATA_SRC_EXPLOSION_H
+#define CATA_SRC_EXPLOSION_H
 
 #include <map>
 #include <string>
 
-using itype_id = std::string;
+#include "string_id.h"
+#include "type_id.h"
 
-struct tripoint;
 class JsonObject;
 class nc_color;
+struct tripoint;
 
 struct shrapnel_data {
     int casing_mass = 0;
-    float fragment_mass = 0.005;
+    float fragment_mass = 0.005f;
     // Percentage
     int recovery        = 0;
-    itype_id drop       = "null";
+    itype_id drop       = itype_id::NULL_ID();
 
-    shrapnel_data() {}
-    shrapnel_data( int casing_mass, float fragment_mass = 0.005, int recovery = 0,
-                   itype_id drop = "null" )
+    shrapnel_data() = default;
+    shrapnel_data( int casing_mass, float fragment_mass = 0.005f, int recovery = 0,
+                   itype_id drop = itype_id::NULL_ID() )
         : casing_mass( casing_mass )
         , fragment_mass( fragment_mass )
         , recovery( recovery )
@@ -41,7 +42,7 @@ struct explosion_data {
     /** Returns the distance at which the power drops below 1. */
     int safe_range() const;
 
-    explosion_data() {}
+    explosion_data() = default;
     explosion_data( float power, float distance_factor = 0.8f, bool fire = false,
                     shrapnel_data shrapnel = {} )
         : power( power )
@@ -59,7 +60,7 @@ namespace explosion_handler
     If factor <= 0, no blast is produced */
 void explosion(
     const tripoint &p, float power, float factor = 0.8f,
-    bool fire = false, int casing_mass = 0, float fragment_mass = 0.05
+    bool fire = false, int casing_mass = 0, float frag_mass = 0.05
 );
 
 void explosion( const tripoint &p, const explosion_data &ex );
@@ -85,4 +86,4 @@ void draw_custom_explosion( const tripoint &p, const std::map<tripoint, nc_color
 shrapnel_data load_shrapnel_data( const JsonObject &jo );
 explosion_data load_explosion_data( const JsonObject &jo );
 
-#endif
+#endif // CATA_SRC_EXPLOSION_H

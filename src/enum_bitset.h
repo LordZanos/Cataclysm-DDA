@@ -1,11 +1,12 @@
 #pragma once
-#ifndef ENUM_BITSET_H
-#define ENUM_BITSET_H
+#ifndef CATA_SRC_ENUM_BITSET_H
+#define CATA_SRC_ENUM_BITSET_H
 
 #include <bitset>
 #include <type_traits>
 
 #include "enum_traits.h"
+#include "json.h"
 
 template<typename E>
 class enum_bitset
@@ -70,6 +71,18 @@ class enum_bitset
             return get_pos( enum_traits<E>::last );
         }
 
+        void serialize( JsonOut &json ) const {
+            json.start_array();
+
+            for( size_t i = 0; i < size(); i++ ) {
+                const E cast_num = static_cast<E>( i );
+                if( test( cast_num ) ) {
+                    json.write_as_string( cast_num );
+                }
+            }
+
+            json.end_array();
+        }
     private:
         static constexpr size_t get_pos( E e ) noexcept {
             return static_cast<size_t>( static_cast<typename std::underlying_type<E>::type>( e ) );
@@ -79,4 +92,4 @@ class enum_bitset
         std::bitset<enum_bitset<E>::size()> bits;
 };
 
-#endif // ENUM_BITSET_H
+#endif // CATA_SRC_ENUM_BITSET_H

@@ -11,12 +11,12 @@
     "mission": 7,
     "mission_offered": "MISSION_Warrener_LOG_1",
     "chat": "TALK_WARRENER",
-    "faction": "no_faction"
+    "faction": "lapin"
   },
   {
     "type": "npc_class",
     "id": "NC_Rabbit_Raiser",
-    "name": "Mr Lapin",
+    "name": { "str": "Mr Lapin" },
     "job_description": "I raise rabbits.",
     "//": "This is a unique NPC who doesn't get randomly selected background traits",
     "common": false,
@@ -47,6 +47,7 @@
       { "text": "Heard anything about the outside world?", "topic": "TALK_WARRENER_WORLD" },
       { "text": "You look different?", "topic": "TALK_WARRENER_MUTATION" },
       { "text": "Anything I can help with?", "topic": "TALK_MISSION_LIST" },
+      { "text": "Do you need any resources?", "topic": "TALK_LAPIN_RESOURCES" },
       { "text": "Well, bye.", "topic": "TALK_DONE" }
     ]
   },
@@ -86,7 +87,7 @@
       "no": "CRISPR?  Radiation?  Something in the water?  Maybe it was bunnies."
     },
     "responses": [
-      { "text": "So it goes", "topic": "TALK_WARRENER" },
+      { "text": "So it goes.", "topic": "TALK_WARRENER" },
       { "text": "You're disgusting.", "topic": "TALK_WARRENER_MUTATION_INSULT" }
     ]
   },
@@ -106,9 +107,44 @@
     ]
   },
   {
+    "type": "talk_topic",
+    "id": "TALK_LAPIN_RESOURCES",
+    "dynamic_line": "The bunnies and I love adding some diversity to the menu and I always need materials for patching fences.",
+    "repeat_responses": {
+      "for_item": [
+        "log",
+        "2x4",
+        "wood_panel",
+        "wood_sheet",
+        "material_sand",
+        "clay_lump",
+        "nail",
+        "wire",
+        "apple",
+        "banana",
+        "orange",
+        "blueberries",
+        "strawberries",
+        "raspberries",
+        "huckleberries",
+        "mulberries",
+        "plums",
+        "carrot",
+        "cabbage",
+        "lettuce",
+        "onion"
+      ],
+      "response": { "text": "Delivering <topic_item>.", "topic": "TALK_DELIVER_ASK" }
+    },
+    "responses": [
+      { "text": "That's all for now.  Can we discuss something else?", "topic": "TALK_WARRENER" },
+      { "text": "That's all for now.  I'd best get going.", "topic": "TALK_DONE" }
+    ]
+  },
+  {
     "id": "MISSION_Warrener_LOG_1",
     "type": "mission_definition",
-    "name": "Timber!",
+    "name": { "str": "Timber!" },
     "description": "Bring five logs.",
     "goal": "MGOAL_FIND_ITEM",
     "difficulty": 1,
@@ -133,7 +169,7 @@
   {
     "id": "MISSION_Warrener_FOOD_2",
     "type": "mission_definition",
-    "name": "Sweets",
+    "name": { "str": "Sweets" },
     "description": "Find 25 blackberries.",
     "goal": "MGOAL_FIND_ITEM",
     "difficulty": 2,

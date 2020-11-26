@@ -6,7 +6,7 @@
       "Some of the topics here can be moved to NPC type specific files later."
     ],
     "type": "talk_topic",
-    "//": "Generic responses for NPCs that can have missions",
+    "//2": "Generic responses for NPCs that can have missions",
     "id": [
       "TALK_SHELTER",
       "TALK_EVAC_MERCHANT",
@@ -51,7 +51,7 @@
           }
         },
         "no": {
-          "has_no_assigned_mission": "I have another job for you.  Want to hear about it?",
+          "has_no_assigned_mission": "I have a job for you.  Want to hear about it?",
           "no": {
             "has_many_assigned_missions": "I just have one job for you.  Want to hear about it?",
             "no": "I just have one job for you.  Want to hear about it?"

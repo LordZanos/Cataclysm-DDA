@@ -1,9 +1,12 @@
 #pragma once
-#ifndef PLAYER_HELPERS_H
-#define PLAYER_HELPERS_H
+#ifndef CATA_TESTS_PLAYER_HELPERS_H
+#define CATA_TESTS_PLAYER_HELPERS_H
 
 #include <string>
 
+#include "type_id.h"
+
+class item;
 class npc;
 class player;
 struct point;
@@ -15,5 +18,8 @@ void clear_avatar();
 void process_activity( player &dummy );
 
 npc &spawn_npc( const point &, const std::string &npc_class );
+void give_and_activate_bionic( player &, bionic_id const & );
 
-#endif
+item tool_with_ammo( const std::string &tool, int qty );
+
+#endif // CATA_TESTS_PLAYER_HELPERS_H

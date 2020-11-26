@@ -2,6 +2,7 @@
 
 * [Translators](#translators)
   * [Getting Started](#getting-Started)
+  * [Glossary](#glossary)
   * [Grammatical gender](#grammatical-gender)
   * [Tips](#tips)
 * [Developers](#developers)
@@ -22,7 +23,6 @@ Some of the currently supported languages are:
 * Chinese (Simplified)
 * Chinese (Traditional)
 * Dutch
-* Esperanto
 * French
 * German
 * Italian (Italy)
@@ -87,6 +87,22 @@ Click on the "Save" button when you are satisfied with your translation.
 ![Web editor](img/translating-editor.png)
 
 See [Transifex's documentation][3] for more information.
+
+### Glossary
+
+This glossary is intended to help explain some CDDA-specific terms and their
+etymology in order to help translations.
+
+* **Exodii**: The Exodii are a bunch of humans from another dimension.  When
+  the Blob invaded their world, they managed to acquire enough technology to
+  open portals of their own, and now they portal to worlds that have been
+  attacked by the Blob and try to rescue survivors.  Exodii is a horrible
+  mangling of "Exodus" - the word literally means leaving or going out and has
+  connotations of forced emigration and refugees.  The Exodii are the people of
+  an Exodus.  While Exodus is a Latin word and "ii" to indicate a plural is a
+  Latin thing, but this isn't actually the [correct Latin
+  plural](https://www.latin-is-simple.com/en/vocabulary/noun/9294/) for this
+  word.
 
 ### Grammatical gender
 
@@ -256,8 +272,15 @@ JSON using the appropriate JSON functions. The JSON syntax is as follows:
 "name": { "ctxt": "foo", "str": "bar", "str_pl": "baz" }
 ```
 
-In the above code, `"ctxt"` and `"str_pl"` are both optional. Additionally,
-`"str_pl"` will only be read if the translation object is constructed using
+or
+
+```JSON
+"name": { "ctxt": "foo", "str_sp": "foo" }
+```
+
+In the above code, `"ctxt"` and `"str_pl"` are both optional, whereas `"str_sp"`
+is equivalent to specifying `"str"` and `"str_pl"` with the same string. Additionally,
+`"str_pl"` and `"str_sp"` will only be read if the translation object is constructed using
 `plural_tag` or `pl_translation()`, or converted using `make_plural()`. Here's
 an example:
 
@@ -265,6 +288,9 @@ an example:
 translation name{ translation::plural_tag() };
 jsobj.read( "name", name );
 ```
+
+If neither "str_pl" nor "str_sp" is specified, the plural form defaults to the
+singular form + "s".
 
 You can also add comments for translators by writing it like below (the order
 of the entries does not matter):
@@ -276,54 +302,12 @@ of the entries does not matter):
 }
 ```
 
-Do note that currently the JSON syntax is only supported for some JSON values,
-which are listed below. If you want other json strings to use this format,
-refer to `translations.h|cpp` and migrate the corresponding code. Afterwards
-you may also want to test `update_pot.sh` to ensure that the strings are
-correctly extracted for translation, and run the unit test to fix text styling
-issues reported by the `translation` class.
-
-| Supported JSON values
-|---
-| Effect names
-| Item action names
-| Item category names
-| Activity verbs
-| Gate action messages
-| Spell names and descriptions
-| Terrain/furniture descriptions
-| Monster melee attack messages
-| Morale effect descriptions
-| Mutation names/descriptions
-| NPC class names/descriptions
-| Tool quality names
-| Score descriptions
-| Skill names/descriptions
-| Bionic names/descriptions
-| Terrain bash sound descriptions
-| Trap-vehicle collision sound descriptions
-| Vehicle part names/descriptions
-| Skill display type names
-| NPC dialogue u_buy_monster unique names
-| Spell messages and monster spell messages
-| Martial art names and descriptions
-| Mission names and descriptions
-| Fault names and descriptions
-| Plant names in item seed data
-| Transform use action messages and menu text
-| Template NPC names and name suffixes
-| NPC talk response text
-| Relic name overrides
-| Speech text
-| Tutorial messages
-| Vitamin names
-| Recipe blueprint names
-| Recipe group recipe descriptions
-| Item names (plural supported) and descriptions
-| Recipe descriptions
-| Inscribe use action verbs/gerunds
-| Monster names (plural supported) and descriptions
-| Snippets
+Do note that the JSON syntax is only supported if a JSON value is read using
+`translation`. If you want new json values to use this format, refer to
+`translations.h|cpp` and read the strings with `translation`. Afterwards
+you also need to update `extract_json_strings.py` and run `lang/update_pot.sh`
+to ensure that the strings are correctly extracted for translation, and run the
+unit test to fix text styling issues reported by the `translation` class.
 
 ### Recommendations
 

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef ACTION_H
-#define ACTION_H
+#ifndef CATA_SRC_ACTION_H
+#define CATA_SRC_ACTION_H
 
 #include <functional>
 #include <map>
@@ -15,6 +15,7 @@ class optional;
 } // namespace cata
 struct tripoint;
 struct point;
+struct input_event;
 
 /**
  * Enumerates all discrete actions that can be performed by player
@@ -219,6 +220,8 @@ enum action_id : int {
     ACTION_IGNORE_ENEMY,
     /** Whitelist the enemy that triggered safemode */
     ACTION_WHITELIST_ENEMY,
+    /** Open workout menu */
+    ACTION_WORKOUT,
     /** Save the game and quit */
     ACTION_SAVE,
     /** Quicksave the game */
@@ -315,6 +318,12 @@ enum action_id : int {
     ACTION_DISPLAY_LIGHTING,
     /** Toggle radiation map */
     ACTION_DISPLAY_RADIATION,
+    /** Toggle transparency map */
+    ACTION_DISPLAY_TRANSPARENCY,
+    /** Toggle reachability zones map */
+    ACTION_DISPLAY_REACHABILITY_ZONES,
+    /** Toggle timing of the game hours */
+    ACTION_TOGGLE_HOUR_TIMER,
     /** Not an action, serves as count of enumerated actions */
     NUM_ACTIONS
     /**@}*/
@@ -356,19 +365,31 @@ void load_keyboard_settings( std::map<char, action_id> &keymap,
  * given action then the returned vector is simply left empty.
  *
  * @param act Action ID to lookup in keymap
- * @param restrict_to_printable If `true` the function returns the bound keys only if they are printable. If `false`, all keys (whether they are printable or not) are returned.
- * @returns all keys (as characters) currently bound to a give action ID
+ * @param maximum_modifier_count Maximum number of modifiers allowed for
+ *        the returned action. <0 means any number is allowed.
+ * @param restrict_to_printable If `true` the function returns the bound
+ *        keys only if they are printable (space counts as non-printable
+ *        here). If `false`, all keys (whether they are printable or not)
+ *        are returned.
+ * @returns all keys (as input events) currently bound to a give action ID
  */
-std::vector<char> keys_bound_to( action_id act, bool restrict_to_printable = true );
+std::vector<input_event> keys_bound_to( action_id act,
+                                        int maximum_modifier_count = -1,
+                                        bool restrict_to_printable = true );
 
 /**
  * Get the key for an action, used in the action menu to give each action the hotkey it is bound to.
  * @param action Action ID to lookup in keymap.
- * @param restrict_to_printable If `true` the function returns the bound key only if it is printable. If `false`, any key (whether they it is printable or not) is returned.
- * @returns the key code for the hotkey or -1 if no key is associated with the given action.
- * @note We ignore bindings to '?' because that will already do something else in this menu (open the menu keybindings).
+ * @param maximum_modifier_count Maximum number of modifiers allowed for
+ *        the returned action. <0 means any number is allowed.
+ * @param restrict_to_printable If `true` the function returns the bound
+ *        keys only if they are printable (space counts as non-printable
+ *        here). If `false`, all keys (whether they are printable or not)
+ *        are returned.
+ * @returns the input event for the hotkey or cata::nullopt if no key is associated with the given action.
  */
-int hotkey_for_action( action_id action, bool restrict_to_printable = true );
+cata::optional<input_event> hotkey_for_action( action_id action,
+        int maximum_modifier_count = -1, bool restrict_to_printable = true );
 
 /**
  * Lookup an action ID by its unique string identifier
@@ -412,17 +433,6 @@ std::string action_ident( action_id act );
 bool can_action_change_worldstate( action_id act );
 
 /**
- * Lookup the action ID assigned to a given key.
- *
- * Looks up a key by character and returns the @ref action_id currently mapped to that key.  If no
- * key is currently mapped then ACTION_NULL is returned instead
- *
- * @param ch The character corresponding to the key to look up
- * @returns The action id of the specified key
- */
-action_id action_from_key( char ch );
-
-/**
  * Request player input of adjacent tile, possibly including vertical tiles
  *
  * Asks the player to input desired direction of an adjacent tile, for example when executing
@@ -459,11 +469,12 @@ cata::optional<tripoint> choose_direction( const std::string &message,
  * the player to indicate valid squares for a given @ref action_id
  *
  * @param[in] message Message used in assembling the prompt to the player
+ * @param[in] failure_message Message used if there is no vaild adjacent tile
  * @param[in] action An action ID to drive the highlighting output
  * @param[in] allow_vertical Allows direction vector to have vertical component if true
  */
 cata::optional<tripoint> choose_adjacent_highlight( const std::string &message,
-        action_id action, bool allow_vertical = false );
+        const std::string &failure_message, action_id action, bool allow_vertical = false );
 
 /**
  * Request player input of adjacent tile with highlighting, possibly on different z-level
@@ -477,13 +488,13 @@ cata::optional<tripoint> choose_adjacent_highlight( const std::string &message,
  * function.
  *
  * @param[in] message Message used in assembling the prompt to the player
+ * @param[in] failure_message Message used if there is no vaild adjacent tile
  * @param[in] allowed A function that will be called to determine if a given location is allowed for selection
  * @param[in] allow_vertical Allows direction vector to have vertical component if true
  */
 cata::optional<tripoint> choose_adjacent_highlight( const std::string &message,
-        const std::function<bool( const tripoint & )> &allowed,
-        bool allow_vertical = false,
-        bool auto_select_if_single = false );
+        const std::string &failure_message, const std::function<bool( const tripoint & )> &allowed,
+        bool allow_vertical = false );
 
 // (Press X (or Y)|Try) to Z
 std::string press_x( action_id act );
@@ -497,8 +508,9 @@ std::string press_x( action_id act, const std::string &act_desc );
 cata::optional<std::string> press_x_if_bound( action_id act );
 
 // only has effect in iso mode
-enum class iso_rotate {
-    no, yes
+enum class iso_rotate : int {
+    no,
+    yes
 };
 
 // Helper function to convert coordinate delta to a movement action
@@ -603,4 +615,4 @@ bool can_move_vertical_at( const tripoint &p, int movez );
  */
 bool can_examine_at( const tripoint &p );
 
-#endif
+#endif // CATA_SRC_ACTION_H

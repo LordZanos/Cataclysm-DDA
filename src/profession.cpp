@@ -1,32 +1,35 @@
 #include "profession.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <map>
-#include <algorithm>
 #include <memory>
 
 #include "addiction.h"
 #include "avatar.h"
+#include "calendar.h"
 #include "debug.h"
+#include "flag.h"
+#include "flat_set.h"
 #include "generic_factory.h"
+#include "item.h"
+#include "item_contents.h"
 #include "item_group.h"
 #include "itype.h"
 #include "json.h"
-#include "mtype.h"
+#include "magic.h"
 #include "options.h"
+#include "pimpl.h"
 #include "player.h"
 #include "pldata.h"
-#include "text_snippets.h"
 #include "translations.h"
-#include "calendar.h"
-#include "item.h"
-#include "flat_set.h"
 #include "type_id.h"
+#include "visitable.h"
 
 namespace
 {
-generic_factory<profession> all_profs( "profession", "ident" );
+generic_factory<profession> all_profs( "profession" );
 const string_id<profession> generic_profession_id( "unemployed" );
 } // namespace
 
@@ -80,8 +83,7 @@ profession::profession()
     : _name_male( no_translation( "null" ) ),
       _name_female( no_translation( "null" ) ),
       _description_male( no_translation( "null" ) ),
-      _description_female( no_translation( "null" ) ),
-      _point_cost( 0 )
+      _description_female( no_translation( "null" ) )
 {
 }
 
@@ -140,7 +142,7 @@ class item_reader : public generic_typed_reader<item_reader>
         void erase_next( JsonIn &jin, C &container ) const {
             const std::string id = jin.get_string();
             reader_detail::handler<C>().erase_if( container, [&id]( const profession::itypedec & e ) {
-                return e.type_id == id;
+                return e.type_id.str() == id;
             } );
         }
 };
@@ -166,10 +168,14 @@ void profession::load( const JsonObject &jo, const std::string & )
     }
 
     if( !was_loaded || jo.has_member( "description" ) ) {
-        const std::string desc = jo.get_string( "description" );
+        std::string desc;
+        mandatory( jo, false, "description", desc, text_style_check_reader() );
         // These also may differ depending on the language settings!
         _description_male = to_translation( "prof_desc_male", desc );
         _description_female = to_translation( "prof_desc_female", desc );
+    }
+    if( jo.has_string( "vehicle" ) ) {
+        _starting_vehicle = vproto_id( jo.get_string( "vehicle" ) );
     }
     if( jo.has_array( "pets" ) ) {
         for( JsonObject subobj : jo.get_array( "pets" ) ) {
@@ -192,26 +198,29 @@ void profession::load( const JsonObject &jo, const std::string & )
     mandatory( jo, was_loaded, "points", _point_cost );
 
     if( !was_loaded || jo.has_member( "items" ) ) {
+        std::string c = "items for profession " + id.str();
         JsonObject items_obj = jo.get_object( "items" );
 
         if( items_obj.has_array( "both" ) ) {
             optional( items_obj, was_loaded, "both", legacy_starting_items, item_reader {} );
         }
         if( items_obj.has_object( "both" ) ) {
-            _starting_items = item_group::load_item_group( items_obj.get_member( "both" ), "collection" );
+            _starting_items = item_group::load_item_group(
+                                  items_obj.get_member( "both" ), "collection", c );
         }
         if( items_obj.has_array( "male" ) ) {
             optional( items_obj, was_loaded, "male", legacy_starting_items_male, item_reader {} );
         }
         if( items_obj.has_object( "male" ) ) {
-            _starting_items_male = item_group::load_item_group( items_obj.get_member( "male" ), "collection" );
+            _starting_items_male = item_group::load_item_group(
+                                       items_obj.get_member( "male" ), "collection", c );
         }
         if( items_obj.has_array( "female" ) ) {
             optional( items_obj, was_loaded, "female",  legacy_starting_items_female, item_reader {} );
         }
         if( items_obj.has_object( "female" ) ) {
             _starting_items_female = item_group::load_item_group( items_obj.get_member( "female" ),
-                                     "collection" );
+                                     "collection", c );
         }
     }
     optional( jo, was_loaded, "no_bonus", no_bonus );
@@ -220,8 +229,10 @@ void profession::load( const JsonObject &jo, const std::string & )
     optional( jo, was_loaded, "addictions", _starting_addictions, addiction_reader {} );
     // TODO: use string_id<bionic_type> or so
     optional( jo, was_loaded, "CBMs", _starting_CBMs, auto_flags_reader<bionic_id> {} );
+    optional( jo, was_loaded, "proficiencies", _starting_proficiencies );
     // TODO: use string_id<mutation_branch> or so
     optional( jo, was_loaded, "traits", _starting_traits, auto_flags_reader<trait_id> {} );
+    optional( jo, was_loaded, "forbidden_traits", _forbidden_traits, auto_flags_reader<trait_id> {} );
     optional( jo, was_loaded, "flags", flags, auto_flags_reader<> {} );
 }
 
@@ -251,17 +262,18 @@ void profession::check_definitions()
 
 void profession::check_item_definitions( const itypedecvec &items ) const
 {
-    for( auto &itd : items ) {
+    for( const auto &itd : items ) {
         if( !item::type_is_defined( itd.type_id ) ) {
-            debugmsg( "profession %s: item %s does not exist", id.str(), itd.type_id );
+            debugmsg( "profession %s: item %s does not exist", id.str(), itd.type_id.str() );
         } else if( !itd.snip_id.is_null() ) {
             const itype *type = item::find_type( itd.type_id );
             if( type->snippet_category.empty() ) {
-                debugmsg( "profession %s: item %s has no snippet category - no description can be set",
-                          id.str(), itd.type_id );
+                debugmsg( "profession %s: item %s has no snippet category - no description can "
+                          "be set", id.str(), itd.type_id.str() );
             } else {
                 if( !itd.snip_id.is_valid() ) {
-                    debugmsg( "profession %s: there's no snippet with id %s", id.str(), itd.snip_id.str() );
+                    debugmsg( "profession %s: there's no snippet with id %s",
+                              id.str(), itd.snip_id.str() );
                 }
             }
         }
@@ -273,7 +285,7 @@ void profession::check_definition() const
     check_item_definitions( legacy_starting_items );
     check_item_definitions( legacy_starting_items_female );
     check_item_definitions( legacy_starting_items_male );
-    if( !no_bonus.empty() && !item::type_is_defined( no_bonus ) ) {
+    if( !no_bonus.is_empty() && !item::type_is_defined( no_bonus ) ) {
         debugmsg( "no_bonus item '%s' is not an itype_id", no_bonus.c_str() );
     }
 
@@ -286,14 +298,23 @@ void profession::check_definition() const
     if( !item_group::group_is_defined( _starting_items_female ) ) {
         debugmsg( "_starting_items_female group is undefined" );
     }
-
+    if( _starting_vehicle && !_starting_vehicle.is_valid() ) {
+        debugmsg( "vehicle prototype %s for profession %s does not exist", _starting_vehicle.c_str(),
+                  id.c_str() );
+    }
     for( const auto &a : _starting_CBMs ) {
         if( !a.is_valid() ) {
             debugmsg( "bionic %s for profession %s does not exist", a.c_str(), id.c_str() );
         }
     }
 
-    for( auto &t : _starting_traits ) {
+    for( const proficiency_id &pid : _starting_proficiencies ) {
+        if( !pid.is_valid() ) {
+            debugmsg( "proficiency %s for profession %s does not exist", pid.str(), id.str() );
+        }
+    }
+
+    for( const auto &t : _starting_traits ) {
         if( !t.is_valid() ) {
             debugmsg( "trait %s for profession %s does not exist", t.c_str(), id.c_str() );
         }
@@ -383,10 +404,12 @@ std::list<item> profession::items( bool male, const std::vector<trait_id> &trait
     result.insert( result.begin(), group_both.begin(), group_both.end() );
     result.insert( result.begin(), group_gender.begin(), group_gender.end() );
 
-    std::vector<itype_id> bonus = item_substitutions.get_bonus_items( traits );
-    for( const itype_id &elem : bonus ) {
-        if( elem != no_bonus ) {
-            result.push_back( item( elem, advanced_spawn_time(), item::default_charges_tag {} ) );
+    if( !has_flag( "NO_BONUS_ITEMS" ) ) {
+        std::vector<itype_id> bonus = item_substitutions.get_bonus_items( traits );
+        for( const itype_id &elem : bonus ) {
+            if( elem != no_bonus ) {
+                result.push_back( item( elem, advanced_spawn_time(), item::default_charges_tag {} ) );
+            }
         }
     }
     for( auto iter = result.begin(); iter != result.end(); ) {
@@ -399,12 +422,12 @@ std::list<item> profession::items( bool male, const std::vector<trait_id> &trait
         }
     }
     for( item &it : result ) {
-        clear_faults( it );
-        if( it.is_holster() && it.contents.size() == 1 ) {
-            clear_faults( it.contents.front() );
-        }
-        if( it.has_flag( "VARSIZE" ) ) {
-            it.item_tags.insert( "FIT" );
+        it.visit_items( []( item * it ) {
+            clear_faults( *it );
+            return VisitResponse::NEXT;
+        } );
+        if( it.has_flag( flag_VARSIZE ) ) {
+            it.set_flag( flag_FIT );
         }
     }
 
@@ -434,6 +457,11 @@ std::list<item> profession::items( bool male, const std::vector<trait_id> &trait
     return result;
 }
 
+vproto_id profession::vehicle() const
+{
+    return _starting_vehicle;
+}
+
 std::vector<mtype_id> profession::pets() const
 {
     return _starting_pets;
@@ -449,9 +477,19 @@ std::vector<bionic_id> profession::CBMs() const
     return _starting_CBMs;
 }
 
+std::vector<proficiency_id> profession::proficiencies() const
+{
+    return _starting_proficiencies;
+}
+
 std::vector<trait_id> profession::get_locked_traits() const
 {
     return _starting_traits;
+}
+
+std::set<trait_id> profession::get_forbidden_traits() const
+{
+    return _forbidden_traits;
 }
 
 profession::StartingSkillList profession::skills() const
@@ -475,6 +513,11 @@ bool profession::is_locked_trait( const trait_id &trait ) const
            _starting_traits.end();
 }
 
+bool profession::is_forbidden_trait( const trait_id &trait ) const
+{
+    return _forbidden_traits.count( trait ) != 0;
+}
+
 std::map<spell_id, int> profession::spells() const
 {
     return _starting_spells;
@@ -483,8 +526,8 @@ std::map<spell_id, int> profession::spells() const
 void profession::learn_spells( avatar &you ) const
 {
     for( const std::pair<spell_id, int> spell_pair : spells() ) {
-        you.magic.learn_spell( spell_pair.first, you, true );
-        spell &sp = you.magic.get_spell( spell_pair.first );
+        you.magic->learn_spell( spell_pair.first, you, true );
+        spell &sp = you.magic->get_spell( spell_pair.first );
         while( sp.get_level() < spell_pair.second && !sp.is_max_level() ) {
             sp.gain_level();
         }
@@ -507,10 +550,10 @@ void json_item_substitution::reset()
 json_item_substitution::substitution::info::info( const JsonValue &value )
 {
     if( value.test_string() ) {
-        new_item = value.get_string();
+        value.read( new_item, true );
     } else {
         const JsonObject jo = value.get_object();
-        new_item = jo.get_string( "item" );
+        jo.read( "item", new_item, true );
         ratio = jo.get_float( "ratio" );
         if( ratio <= 0.0 ) {
             jo.throw_error( "Ratio must be positive", "ratio" );
@@ -540,13 +583,14 @@ void json_item_substitution::load( const JsonObject &jo )
             return p.first == it;
         } ) != bonuses.end();
     };
-    if( item_mode && check_duplicate_item( title ) ) {
+    if( item_mode && check_duplicate_item( itype_id( title ) ) ) {
         jo.throw_error( "Duplicate definition of item" );
     }
 
     if( item_mode ) {
         if( jo.has_member( "bonus" ) ) {
-            bonuses.emplace_back( title, trait_requirements( jo.get_object( "bonus" ) ) );
+            bonuses.emplace_back( itype_id( title ),
+                                  trait_requirements( jo.get_object( "bonus" ) ) );
         }
 
         for( const JsonValue sub : jo.get_array( "sub" ) ) {
@@ -556,12 +600,13 @@ void json_item_substitution::load( const JsonObject &jo )
             for( const JsonValue info : obj.get_array( "new" ) ) {
                 s.infos.emplace_back( info );
             }
-            substitutions[title].push_back( s );
+            substitutions[itype_id( title )].push_back( s );
         }
     } else {
         for( const JsonObject sub : jo.get_array( "sub" ) ) {
             substitution s;
-            const itype_id old_it = sub.get_string( "item" );
+            itype_id old_it;
+            sub.read( "item", old_it, true );
             if( check_duplicate_item( old_it ) ) {
                 sub.throw_error( "Duplicate definition of item" );
             }
@@ -626,8 +671,8 @@ std::vector<item> json_item_substitution::get_substitution( const item &it,
     auto iter = substitutions.find( it.typeId() );
     std::vector<item> ret;
     if( iter == substitutions.end() ) {
-        for( const item &con : it.contents ) {
-            const auto sub = get_substitution( con, traits );
+        for( const item *con : it.contents.all_items_top() ) {
+            const auto sub = get_substitution( *con, traits );
             ret.insert( ret.end(), sub.begin(), sub.end() );
         }
         return ret;
@@ -644,18 +689,17 @@ std::vector<item> json_item_substitution::get_substitution( const item &it,
     const int old_amt = it.count();
     for( const substitution::info &inf : sub->infos ) {
         item result( inf.new_item, advanced_spawn_time() );
-        const int new_amt = std::max( 1, static_cast<int>( std::round( inf.ratio * old_amt ) ) );
+        int new_amount = std::max( 1, static_cast<int>( std::round( inf.ratio * old_amt ) ) );
 
         if( !result.count_by_charges() ) {
-            for( int i = 0; i < new_amt; i++ ) {
+            for( int i = 0; i < new_amount; i++ ) {
                 ret.push_back( result.in_its_container() );
             }
         } else {
-            result.mod_charges( -result.charges + new_amt );
-            while( result.charges > 0 ) {
-                const item pushed = result.in_its_container();
+            while( new_amount > 0 ) {
+                const item pushed = result.in_its_container( new_amount );
+                new_amount -= pushed.charges_of( inf.new_item );
                 ret.push_back( pushed );
-                result.mod_charges( pushed.contents.empty() ? -pushed.charges : -pushed.contents.back().charges );
             }
         }
     }

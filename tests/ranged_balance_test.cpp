@@ -1,31 +1,37 @@
+#include "catch/catch.hpp"
+
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <list>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
 
-#include "catch/catch.hpp"
-#include "cata_utility.h"
 #include "ballistics.h"
-#include "creature.h"
-#include "dispersion.h"
-#include "map_helpers.h"
-#include "npc.h"
-#include "test_statistics.h"
-#include "units.h"
 #include "bodypart.h"
 #include "calendar.h"
+#include "cata_utility.h"
+#include "creature.h"
+#include "dispersion.h"
 #include "game_constants.h"
 #include "inventory.h"
 #include "item.h"
 #include "item_location.h"
+#include "item_pocket.h"
+#include "itype.h"
 #include "json.h"
-#include "player.h"
-#include "player_helpers.h"
-#include "material.h"
-#include "skill.h"
-#include "type_id.h"
+#include "map_helpers.h"
+#include "npc.h"
+#include "pimpl.h"
 #include "point.h"
+#include "ret_val.h"
+#include "test_statistics.h"
+#include "translations.h"
+#include "type_id.h"
+#include "units.h"
+#include "value_ptr.h"
 
 using firing_statistics = statistics<bool>;
 
@@ -34,7 +40,7 @@ class Threshold
     public:
         Threshold( const double accuracy, const double chance )
             : _accuracy( accuracy ), _chance( chance ) {
-        };
+        }
         double accuracy() const {
             return _accuracy;
         }
@@ -72,30 +78,47 @@ std::ostream &operator<<( std::ostream &stream, const dispersion_sources &source
 }
 
 static void arm_shooter( npc &shooter, const std::string &gun_type,
-                         const std::vector<std::string> &mods = {} )
+                         const std::vector<std::string> &mods = {},
+                         const std::string &ammo_type = "" )
 {
     shooter.remove_weapon();
+    // XL so arrows can fit.
+    if( !shooter.is_wearing( itype_id( "debug_backpack" ) ) ) {
+        shooter.worn.push_back( item( "debug_backpack" ) );
+    }
 
-    const itype_id &gun_id( gun_type );
+    const itype_id &gun_id{ itype_id( gun_type ) };
     // Give shooter a loaded gun of the requested type.
     item &gun = shooter.i_add( item( gun_id ) );
-    const itype_id ammo_id = gun.ammo_default();
+    itype_id ammo_id;
+    // if ammo is not supplied we want the default
+    if( ammo_type.empty() ) {
+        if( gun.ammo_default().is_null() ) {
+            ammo_id = item( gun.magazine_default() ).ammo_default();
+        } else {
+            ammo_id = gun.ammo_default();
+        }
+    } else {
+        ammo_id = itype_id( ammo_type );
+    }
+    const ammotype &type_of_ammo = item::find_type( ammo_id )->ammo->type;
     if( gun.magazine_integral() ) {
-        item &ammo = shooter.i_add( item( ammo_id, calendar::turn, gun.ammo_capacity() ) );
+        item &ammo = shooter.i_add( item( ammo_id, calendar::turn, gun.ammo_capacity( type_of_ammo ) ) );
         REQUIRE( gun.is_reloadable_with( ammo_id ) );
         REQUIRE( shooter.can_reload( gun, ammo_id ) );
-        gun.reload( shooter, item_location( shooter, &ammo ), gun.ammo_capacity() );
+        gun.reload( shooter, item_location( shooter, &ammo ), gun.ammo_capacity( type_of_ammo ) );
     } else {
         const itype_id magazine_id = gun.magazine_default();
         item &magazine = shooter.i_add( item( magazine_id ) );
-        item &ammo = shooter.i_add( item( ammo_id, calendar::turn, magazine.ammo_capacity() ) );
+        item &ammo = shooter.i_add( item( ammo_id, calendar::turn,
+                                          magazine.ammo_capacity( type_of_ammo ) ) );
         REQUIRE( magazine.is_reloadable_with( ammo_id ) );
         REQUIRE( shooter.can_reload( magazine, ammo_id ) );
-        magazine.reload( shooter, item_location( shooter, &ammo ), magazine.ammo_capacity() );
-        gun.reload( shooter, item_location( shooter, &magazine ), magazine.ammo_capacity() );
+        magazine.reload( shooter, item_location( shooter, &ammo ), magazine.ammo_capacity( type_of_ammo ) );
+        gun.reload( shooter, item_location( shooter, &magazine ), magazine.ammo_capacity( type_of_ammo ) );
     }
     for( const auto &mod : mods ) {
-        gun.contents.push_back( item( itype_id( mod ) ) );
+        gun.put_in( item( itype_id( mod ) ), item_pocket::pocket_type::MOD );
     }
     shooter.wield( gun );
 }
@@ -104,13 +127,11 @@ static void equip_shooter( npc &shooter, const std::vector<std::string> &apparel
 {
     CHECK( !shooter.in_vehicle );
     shooter.worn.clear();
-    shooter.inv.clear();
+    shooter.inv->clear();
     for( const std::string &article : apparel ) {
         shooter.wear_item( item( article ) );
     }
 }
-
-std::array<double, 5> accuracy_levels = {{ accuracy_grazing, accuracy_standard, accuracy_goodhit, accuracy_critical, accuracy_headshot }};
 
 static firing_statistics firing_test( const dispersion_sources &dispersion,
                                       const int range, const Threshold &threshold )
@@ -214,7 +235,7 @@ static void test_shooting_scenario( npc &shooter, const int min_quickdraw_range,
 static void test_fast_shooting( npc &shooter, const int moves, float hit_rate )
 {
     const int fast_shooting_range = 3;
-    const float hit_rate_cap = hit_rate + 0.3;
+    const float hit_rate_cap = hit_rate + 0.3f;
     const dispersion_sources dispersion = get_dispersion( shooter, moves );
     firing_statistics fast_stats = firing_test( dispersion, fast_shooting_range,
                                    Threshold( accuracy_standard, hit_rate ) );
@@ -238,7 +259,7 @@ static void test_fast_shooting( npc &shooter, const int moves, float hit_rate )
 
 static void assert_encumbrance( npc &shooter, int encumbrance )
 {
-    for( const body_part bp : all_body_parts ) {
+    for( const bodypart_id &bp : shooter.get_all_body_parts() ) {
         INFO( "Body Part: " << body_part_name( bp ) );
         REQUIRE( shooter.encumb( bp ) == encumbrance );
     }
@@ -246,17 +267,29 @@ static void assert_encumbrance( npc &shooter, int encumbrance )
 
 static constexpr tripoint shooter_pos( 60, 60, 0 );
 
-TEST_CASE( "unskilled_shooter_accuracy", "[ranged] [balance]" )
+TEST_CASE( "unskilled_shooter_accuracy", "[ranged] [balance] [slow]" )
 {
     clear_map();
     standard_npc shooter( "Shooter", shooter_pos, {}, 0, 8, 8, 8, 7 );
-    equip_shooter( shooter, { "bastsandals", "armguard_chitin", "armor_chitin", "beekeeping_gloves", "fencing_mask" } );
+    shooter.set_body();
+    shooter.worn.push_back( item( "backpack" ) );
+    equip_shooter( shooter, { "bastsandals", "armguard_chitin", "armor_chitin", "beekeeping_gloves", "mask_guy_fawkes", "cowboy_hat" } );
     assert_encumbrance( shooter, 10 );
 
     SECTION( "an unskilled shooter with an inaccurate pistol" ) {
         arm_shooter( shooter, "glock_19" );
         test_shooting_scenario( shooter, 4, 5, 15 );
         test_fast_shooting( shooter, 40, 0.3 );
+    }
+    SECTION( "an unskilled archer with an inaccurate bow" ) {
+        arm_shooter( shooter, "shortbow", { "bow_sight_pin" }, "arrow_field_point_fletched" );
+        test_shooting_scenario( shooter, 3, 3, 12 );
+        test_fast_shooting( shooter, 50, 0.2 );
+    }
+    SECTION( "an unskilled archer with an inaccurate crossbow" ) {
+        arm_shooter( shooter, "crossbow", {}, "bolt_makeshift" );
+        test_shooting_scenario( shooter, 4, 6, 17 );
+        test_fast_shooting( shooter, 50, 0.2 );
     }
     SECTION( "an unskilled shooter with an inaccurate shotgun" ) {
         arm_shooter( shooter, "winchester_1897" );
@@ -279,6 +312,7 @@ TEST_CASE( "competent_shooter_accuracy", "[ranged] [balance]" )
 {
     clear_map();
     standard_npc shooter( "Shooter", shooter_pos, {}, 5, 10, 10, 10, 10 );
+    shooter.set_body();
     equip_shooter( shooter, { "cloak_wool", "footrags_wool", "gloves_wraps_fur", "glasses_safety", "balclava" } );
     assert_encumbrance( shooter, 5 );
 
@@ -286,6 +320,16 @@ TEST_CASE( "competent_shooter_accuracy", "[ranged] [balance]" )
         arm_shooter( shooter, "sw_619", { "red_dot_sight" } );
         test_shooting_scenario( shooter, 10, 15, 33 );
         test_fast_shooting( shooter, 30, 0.5 );
+    }
+    SECTION( "a skilled archer with an accurate bow" ) {
+        arm_shooter( shooter, "recurbow", { "bow_sight" } );
+        test_shooting_scenario( shooter, 8, 10, 32 );
+        test_fast_shooting( shooter, 50, 0.4 );
+    }
+    SECTION( "a skilled archer with an accurate crossbow" ) {
+        arm_shooter( shooter, "compositecrossbow", { "tele_sight" }, "bolt_steel" );
+        test_shooting_scenario( shooter, 9, 13, 33 );
+        test_fast_shooting( shooter, 50, 0.4 );
     }
     SECTION( "a skilled shooter with an accurate shotgun" ) {
         arm_shooter( shooter, "ksg", { "red_dot_sight" } );
@@ -308,6 +352,7 @@ TEST_CASE( "expert_shooter_accuracy", "[ranged] [balance]" )
 {
     clear_map();
     standard_npc shooter( "Shooter", shooter_pos, {}, 10, 20, 20, 20, 20 );
+    shooter.set_body();
     equip_shooter( shooter, { } );
     assert_encumbrance( shooter, 0 );
 
@@ -315,6 +360,16 @@ TEST_CASE( "expert_shooter_accuracy", "[ranged] [balance]" )
         arm_shooter( shooter, "sw629", { "pistol_scope" } );
         test_shooting_scenario( shooter, 18, 20, 140 );
         test_fast_shooting( shooter, 20, 0.6 );
+    }
+    SECTION( "an expert archer with an excellent bow" ) {
+        arm_shooter( shooter, "compbow_high", { "bow_scope" }, "arrow_cf" );
+        test_shooting_scenario( shooter, 12, 20, 80 );
+        test_fast_shooting( shooter, 30, 0.6 );
+    }
+    SECTION( "an expert archer with an excellent crossbow" ) {
+        arm_shooter( shooter, "compcrossbow", { "holo_sight" }, "bolt_cf" );
+        test_shooting_scenario( shooter, 12, 20, 100 );
+        test_fast_shooting( shooter, 50, 0.4 );
     }
     SECTION( "an expert shooter with an excellent shotgun" ) {
         arm_shooter( shooter, "m1014", { "holo_sight" } );
@@ -353,7 +408,7 @@ static void range_test( const Threshold &test_threshold, bool write_data = false
             }
             // The intent here is to skip over dispersion values proportionally to how far from converging we are.
             // As long as we check several adjacent dispersion values before a hit, we're good.
-            d -= int( ( 1 - ( stats.avg() / test_threshold.chance() ) ) * 15 ) * 5;
+            d -= static_cast<int>( ( 1 - ( stats.avg() / test_threshold.chance() ) ) * 15 ) * 5;
         }
         if( found_dispersion == -1 ) {
             WARN( "No matching dispersion found" );

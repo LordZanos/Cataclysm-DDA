@@ -1,31 +1,27 @@
 #pragma once
-#ifndef PROFESSION_H
-#define PROFESSION_H
+#ifndef CATA_SRC_PROFESSION_H
+#define CATA_SRC_PROFESSION_H
 
+#include <algorithm>
 #include <list>
 #include <map>
 #include <set>
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "string_id.h"
 #include "pldata.h"
+#include "string_id.h"
 #include "translations.h"
 #include "type_id.h"
 
 template<typename T>
 class generic_factory;
 
-using Group_tag = std::string;
 class item;
-
-using itype_id = std::string;
+class JsonObject;
 class avatar;
 class player;
-class JsonObject;
-
-enum add_type : int;
 
 class profession
 {
@@ -33,7 +29,7 @@ class profession
         using StartingSkill = std::pair<skill_id, int>;
         using StartingSkillList = std::vector<StartingSkill>;
         struct itypedec {
-            std::string type_id;
+            itype_id type_id;
             /** Snippet id, @see snippet_library. */
             snippet_id snip_id;
             // compatible with when this was just a std::string
@@ -54,21 +50,24 @@ class profession
         translation _name_female;
         translation _description_male;
         translation _description_female;
-        signed int _point_cost;
+        signed int _point_cost = 0;
 
         // TODO: In professions.json, replace lists of itypes (legacy) with item groups
         itypedecvec legacy_starting_items;
         itypedecvec legacy_starting_items_male;
         itypedecvec legacy_starting_items_female;
-        Group_tag _starting_items = "EMPTY_GROUP";
-        Group_tag _starting_items_male = "EMPTY_GROUP";
-        Group_tag _starting_items_female = "EMPTY_GROUP";
+        item_group_id _starting_items = item_group_id( "EMPTY_GROUP" );
+        item_group_id _starting_items_male = item_group_id( "EMPTY_GROUP" );
+        item_group_id _starting_items_female = item_group_id( "EMPTY_GROUP" );
         itype_id no_bonus; // See profession::items and class json_item_substitution in profession.cpp
 
         std::vector<addiction> _starting_addictions;
         std::vector<bionic_id> _starting_CBMs;
+        std::vector<proficiency_id> _starting_proficiencies;
         std::vector<trait_id> _starting_traits;
+        std::set<trait_id> _forbidden_traits;
         std::vector<mtype_id> _starting_pets;
+        vproto_id _starting_vehicle = vproto_id::NULL_ID();
         // the int is what level the spell starts at
         std::map<spell_id, int> _starting_spells;
         std::set<std::string> flags; // flags for some special properties of the profession
@@ -103,8 +102,10 @@ class profession
         signed int point_cost() const;
         std::list<item> items( bool male, const std::vector<trait_id> &traits ) const;
         std::vector<addiction> addictions() const;
+        vproto_id vehicle() const;
         std::vector<mtype_id> pets() const;
         std::vector<bionic_id> CBMs() const;
+        std::vector<proficiency_id> proficiencies() const;
         StartingSkillList skills() const;
 
         std::map<spell_id, int> spells() const;
@@ -125,7 +126,9 @@ class profession
          */
         bool can_pick( const player &u, int points ) const;
         bool is_locked_trait( const trait_id &trait ) const;
+        bool is_forbidden_trait( const trait_id &trait ) const;
         std::vector<trait_id> get_locked_traits() const;
+        std::set<trait_id> get_forbidden_traits() const;
 };
 
-#endif
+#endif // CATA_SRC_PROFESSION_H

@@ -32,7 +32,7 @@
         "                        "
       ],
       "terrain": { " ": "t_null" },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan" },
+      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan", "6": "f_console" },
       "computers": {
         "6": {
           "name": "Evac shelter computer",
@@ -78,8 +78,20 @@
         "    | =........c..x|    ",
         "    |||||:||+|:|||||    "
       ],
-      "terrain": { "x": "t_console_broken" },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan" },
+      "terrain": {
+        ":": [ "t_window_frame", "t_window_no_curtains" ],
+        "+": [ "t_door_c", "t_door_b" ],
+        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ]
+      },
+      "furniture": {
+        "b": "f_bench",
+        "c": "f_cupboard",
+        "l": "f_locker",
+        "S": "f_sink",
+        "%": "f_trashcan",
+        "6": "f_console",
+        "x": "f_console_broken"
+      },
       "computers": {
         "6": {
           "name": "Evac shelter computer",
@@ -106,7 +118,7 @@
   {
     "type": "mapgen",
     "method": "json",
-    "nested_mapgen_id": "shelter_nest_vandalized",
+    "nested_mapgen_id": "shelter_nest_vandal",
     "object": {
       "mapgensize": [ 24, 24 ],
       "rows": [
@@ -138,10 +150,16 @@
       "terrain": {
         ":": [ "t_window_frame", "t_window_no_curtains" ],
         "+": [ "t_door_c", "t_door_b" ],
-        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ],
-        "6": "t_console_broken"
+        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ]
       },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": [ [ "f_locker", 2 ], "f_wreckage" ], "S": "f_sink", "%": "f_trashcan" },
+      "furniture": {
+        "b": "f_bench",
+        "c": "f_cupboard",
+        "l": [ [ "f_locker", 2 ], "f_wreckage" ],
+        "S": "f_sink",
+        "%": "f_trashcan",
+        "6": "f_console_broken"
+      },
       "items": {
         "l": { "item": "shelter_supplies", "chance": 40 },
         "c": [ { "item": "trash", "chance": 1 }, { "item": "softdrugs", "chance": 2 }, { "item": "shelter_supplies", "chance": 10 } ],
@@ -184,7 +202,7 @@
         "                        "
       ],
       "terrain": { " ": "t_null" },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan" },
+      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan", "6": "f_console" },
       "items": { "l": { "item": "SUS_evac_shelter_locker", "chance": 70 }, "c": { "item": "SUS_evac_shelter_cabinet", "chance": 50 } },
       "computers": {
         "6": {
@@ -222,16 +240,28 @@
         "    |...........cc.|    ",
         "    |.bbbbb........|    ",
         "    |.......l|||...|    ",
-        "    |.-----.l| =...|    ",
+        "    |.|||||.l| =...|    ",
         "    :.......l|||...:    ",
-        "    |.b.b.b...c|-+-|    ",
+        "    |.b.b.b...c||+||    ",
         "    |.b.b.b...c|..l|    ",
         "    |.b.b.b...c|..l|    ",
         "    |..........|..l|    ",
         "    |||||:||+|:|||||    "
       ],
-      "terrain": { "x": "t_console_broken" },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan" },
+      "terrain": {
+        ":": [ "t_window_frame", "t_window" ],
+        "+": [ "t_door_c", "t_door_b" ],
+        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ]
+      },
+      "furniture": {
+        "x": "f_console_broken",
+        "b": "f_bench",
+        "c": "f_cupboard",
+        "l": "f_locker",
+        "S": "f_sink",
+        "%": "f_trashcan",
+        "6": "f_console"
+      },
       "computers": {
         "6": {
           "name": "Evac shelter computer",
@@ -254,7 +284,7 @@
   {
     "type": "mapgen",
     "method": "json",
-    "nested_mapgen_id": "shelter_1_nest_vandalized",
+    "nested_mapgen_id": "shelter_1_nest_vandal",
     "object": {
       "mapgensize": [ 24, 24 ],
       "rows": [
@@ -275,9 +305,9 @@
         "    |...........cc.|    ",
         "    |.bbbbb........|    ",
         "    |.......l|||...|    ",
-        "    |.-----.l| =...|    ",
+        "    |.|||||.l| =...|    ",
         "    :.......l|||...:    ",
-        "    |.b.b.b...c|-+-|    ",
+        "    |.b.b.b...c||+||    ",
         "    |.b.b.b...c|..l|    ",
         "    |.b.b.b...c|..l|    ",
         "    |..........|..l|    ",
@@ -286,10 +316,16 @@
       "terrain": {
         ":": [ "t_window_frame", "t_window" ],
         "+": [ "t_door_c", "t_door_b" ],
-        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ],
-        "6": "t_console_broken"
+        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ]
       },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": [ [ "f_locker", 2 ], "f_wreckage" ], "S": "f_sink", "%": "f_trashcan" },
+      "furniture": {
+        "b": "f_bench",
+        "c": "f_cupboard",
+        "l": [ [ "f_locker", 2 ], "f_wreckage" ],
+        "S": "f_sink",
+        "%": "f_trashcan",
+        "6": "f_console_broken"
+      },
       "items": {
         "l": { "item": "shelter_supplies", "chance": 40 },
         "c": [ { "item": "trash", "chance": 1 }, { "item": "softdrugs", "chance": 2 }, { "item": "shelter_supplies", "chance": 10 } ],
@@ -332,7 +368,17 @@
         "                        "
       ],
       "terrain": { " ": "t_null" },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan" },
+      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan", "6": "f_console" },
+      "computers": {
+        "6": {
+          "name": "Evac shelter computer",
+          "options": [
+            { "name": "Emergency Message", "action": "emerg_mess" },
+            { "name": "Disable External Power", "action": "complete_disable_external_power" },
+            { "name": "Contact Us", "action": "emerg_ref_center" }
+          ]
+        }
+      },
       "items": { "l": { "item": "SUS_evac_shelter_locker", "chance": 70 }, "c": { "item": "SUS_evac_shelter_cabinet", "chance": 50 } }
     }
   },
@@ -353,23 +399,36 @@
         "   |||||||||%......l|   ",
         "   |*|cccc6........l|   ",
         "   |.=.............l|   ",
-        "  |--|.............|||  ",
+        "  ||||.............|||  ",
         "  |b.....bbbbb...b..b|  ",
         "  :b..b..........b..b:  ",
         "  |b..b...llll...b..b|  ",
-        "  |b..b...|--|...b..b|  ",
+        "  |b..b...||||...b..b|  ",
         "  |b..b..........b..b|  ",
         "  |b..b..........b..b|  ",
-        "  :b..b...|--|...b..b:  ",
+        "  :b..b...||||...b..b:  ",
         "  |b..b...llll...b..b|  ",
         "  |b..b..........b..b|  ",
-        "  |--.....bbbb.....|||  ",
+        "  |||.....bbbb.....|||  ",
         "   |l..............x|   ",
         "   ||||||||||......c|   ",
         "            ||:|+|:||   "
       ],
-      "terrain": { "x": "t_console_broken" },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": "f_locker", "S": "f_sink", "%": "f_trashcan" },
+      "terrain": {
+        ":": [ "t_window_frame", "t_window_no_curtains" ],
+        "+": [ "t_door_c", "t_door_b" ],
+        "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ],
+        "*": "t_ladder_up"
+      },
+      "furniture": {
+        "b": "f_bench",
+        "c": "f_cupboard",
+        "l": "f_locker",
+        "S": "f_sink",
+        "%": "f_trashcan",
+        "6": "f_console",
+        "x": "f_console_broken"
+      },
       "computers": {
         "6": {
           "name": "Evac shelter computer",
@@ -396,7 +455,7 @@
   {
     "type": "mapgen",
     "method": "json",
-    "nested_mapgen_id": "shelter_2_nest_vandalized",
+    "nested_mapgen_id": "shelter_2_nest_vandal",
     "object": {
       "mapgensize": [ 24, 24 ],
       "rows": [
@@ -410,17 +469,17 @@
         "   |||||||||%......l|   ",
         "   |*|cccc6........l|   ",
         "   |.=.............l|   ",
-        "  |--|.............|||  ",
+        "  ||||.............|||  ",
         "  |b.....bbbbb...b..b|  ",
         "  :b..b..........b..b:  ",
         "  |b..b...llll...b..b|  ",
-        "  |b..b...|--|...b..b|  ",
+        "  |b..b...||||...b..b|  ",
         "  |b..b..........b..b|  ",
         "  |b..b..........b..b|  ",
-        "  :b..b...|--|...b..b:  ",
+        "  :b..b...||||...b..b:  ",
         "  |b..b..........b..b|  ",
         "  |b..b..........b..b|  ",
-        "  |--.....bbbb.....|||  ",
+        "  |||.....bbbb.....|||  ",
         "   |l..............x|   ",
         "   ||||||||||......c|   ",
         "            ||:|+|:||   "
@@ -429,9 +488,17 @@
         ":": [ "t_window_frame", "t_window" ],
         "+": [ "t_door_c", "t_door_b" ],
         "=": [ "t_door_b", "t_door_locked_interior", "t_door_c", "t_door_o" ],
-        "6": [ "t_console", "t_console_broken" ]
+        "*": "t_ladder_up"
       },
-      "furniture": { "b": "f_bench", "c": "f_cupboard", "l": [ [ "f_locker", 2 ], "f_wreckage" ], "S": "f_sink", "%": "f_trashcan" },
+      "furniture": {
+        "b": "f_bench",
+        "c": "f_cupboard",
+        "l": [ [ "f_locker", 2 ], "f_wreckage" ],
+        "S": "f_sink",
+        "%": "f_trashcan",
+        "6": [ "f_console", "f_console_broken" ],
+        "x": "f_console_broken"
+      },
       "items": {
         "l": { "item": "shelter_supplies", "chance": 40 },
         "c": [ { "item": "trash", "chance": 1 }, { "item": "softdrugs", "chance": 2 }, { "item": "shelter_supplies", "chance": 10 } ],

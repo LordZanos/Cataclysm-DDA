@@ -2,11 +2,14 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
 
 #include "debug.h"
+#include "enum_conversions.h"
+#include "int_id.h"
 #include "json.h"
 #include "options.h"
 #include "rng.h"
@@ -86,7 +89,7 @@ static void load_forest_biome( const JsonObject &jo, forest_biome &forest_biome,
 {
     read_and_set_or_throw<int>( jo, "sparseness_adjacency_factor",
                                 forest_biome.sparseness_adjacency_factor, !overlay );
-    read_and_set_or_throw<std::string>( jo, "item_group", forest_biome.item_group, !overlay );
+    read_and_set_or_throw( jo, "item_group", forest_biome.item_group, !overlay );
     read_and_set_or_throw<int>( jo, "item_group_chance", forest_biome.item_group_chance, !overlay );
     read_and_set_or_throw<int>( jo, "item_spawn_iterations", forest_biome.item_spawn_iterations,
                                 !overlay );
@@ -219,6 +222,19 @@ static void load_forest_trail_settings( const JsonObject &jo,
                 forest_trail_settings.unfinalized_trail_terrain[member.name()] = member.get_int();
             }
         }
+
+        if( !forest_trail_settings_jo.has_object( "trailheads" ) ) {
+            if( !overlay ) {
+                forest_trail_settings_jo.throw_error( "trailheads required" );
+            }
+        } else {
+            for( const JsonMember member : forest_trail_settings_jo.get_object( "trailheads" ) ) {
+                if( member.is_comment() ) {
+                    continue;
+                }
+                forest_trail_settings.trailheads.add( overmap_special_id( member.name() ), member.get_int() );
+            }
+        }
     }
 }
 
@@ -292,6 +308,27 @@ static void load_overmap_forest_settings(
     }
 }
 
+static void load_overmap_ravine_settings(
+    const JsonObject &jo, overmap_ravine_settings &overmap_ravine_settings, const bool strict,
+    const bool overlay )
+{
+    if( !jo.has_object( "overmap_ravine_settings" ) ) {
+        if( strict ) {
+            jo.throw_error( "\"overmap_ravine_settings\": { … } required for default" );
+        }
+    } else {
+        JsonObject overmap_ravine_settings_jo = jo.get_object( "overmap_ravine_settings" );
+        read_and_set_or_throw<int>( overmap_ravine_settings_jo, "num_ravines",
+                                    overmap_ravine_settings.num_ravines, !overlay );
+        read_and_set_or_throw<int>( overmap_ravine_settings_jo, "ravine_range",
+                                    overmap_ravine_settings.ravine_range, !overlay );
+        read_and_set_or_throw<int>( overmap_ravine_settings_jo, "ravine_width",
+                                    overmap_ravine_settings.ravine_width, !overlay );
+        read_and_set_or_throw<int>( overmap_ravine_settings_jo, "ravine_depth",
+                                    overmap_ravine_settings.ravine_depth, !overlay );
+    }
+}
+
 static void load_overmap_lake_settings( const JsonObject &jo,
                                         overmap_lake_settings &overmap_lake_settings,
                                         const bool strict, const bool overlay )
@@ -306,6 +343,8 @@ static void load_overmap_lake_settings( const JsonObject &jo,
                                        overmap_lake_settings.noise_threshold_lake, !overlay );
         read_and_set_or_throw<int>( overmap_lake_settings_jo, "lake_size_min",
                                     overmap_lake_settings.lake_size_min, !overlay );
+        read_and_set_or_throw<int>( overmap_lake_settings_jo, "lake_depth",
+                                    overmap_lake_settings.lake_depth, !overlay );
 
         if( !overmap_lake_settings_jo.has_array( "shore_extendable_overmap_terrain" ) ) {
             if( !overlay ) {
@@ -324,13 +363,12 @@ static void load_overmap_lake_settings( const JsonObject &jo,
                 overmap_lake_settings_jo.throw_error( "shore_extendable_overmap_terrain_aliases required" );
             }
         } else {
-            oter_str_id alias;
-            for( JsonObject jo :
+            for( JsonObject alias_entry :
                  overmap_lake_settings_jo.get_array( "shore_extendable_overmap_terrain_aliases" ) ) {
                 shore_extendable_overmap_terrain_alias alias;
-                jo.read( "om_terrain", alias.overmap_terrain );
-                jo.read( "alias", alias.alias );
-                alias.match_type = jo.get_enum_value<ot_match_type>( "om_terrain_match_type",
+                alias_entry.read( "om_terrain", alias.overmap_terrain );
+                alias_entry.read( "alias", alias.alias );
+                alias.match_type = alias_entry.get_enum_value<ot_match_type>( "om_terrain_match_type",
                                    ot_match_type::contains );
                 overmap_lake_settings.shore_extendable_overmap_terrain_aliases.emplace_back( alias );
             }
@@ -517,9 +555,6 @@ void load_region_settings( const JsonObject &jo )
         if( !cjo.read( "park_sigma", new_region.city_spec.park_sigma ) && strict ) {
             jo.throw_error( "city: park_sigma required for default" );
         }
-        if( !cjo.read( "house_basement_chance", new_region.city_spec.house_basement_chance ) && strict ) {
-            jo.throw_error( "city: house_basement_chance required for default" );
-        }
         const auto load_building_types = [&jo, &cjo, strict]( const std::string & type,
         building_bin & dest ) {
             if( !cjo.has_object( type ) && strict ) {
@@ -534,7 +569,6 @@ void load_region_settings( const JsonObject &jo )
             }
         };
         load_building_types( "houses", new_region.city_spec.houses );
-        load_building_types( "basements", new_region.city_spec.basements );
         load_building_types( "shops", new_region.city_spec.shops );
         load_building_types( "parks", new_region.city_spec.parks );
     }
@@ -553,6 +587,8 @@ void load_region_settings( const JsonObject &jo )
     load_overmap_forest_settings( jo, new_region.overmap_forest, strict, false );
 
     load_overmap_lake_settings( jo, new_region.overmap_lake, strict, false );
+
+    load_overmap_ravine_settings( jo, new_region.overmap_ravine, strict, false );
 
     load_region_terrain_and_furniture_settings( jo, new_region.region_terrain_and_furniture, strict,
             false );
@@ -685,7 +721,6 @@ void apply_region_overlay( const JsonObject &jo, regional_settings &region )
     cityjo.read( "shop_sigma", region.city_spec.shop_sigma );
     cityjo.read( "park_radius", region.city_spec.park_radius );
     cityjo.read( "park_sigma", region.city_spec.park_sigma );
-    cityjo.read( "house_basement_chance", region.city_spec.house_basement_chance );
 
     const auto load_building_types = [&cityjo]( const std::string & type, building_bin & dest ) {
         for( const JsonMember member : cityjo.get_object( type ) ) {
@@ -696,7 +731,6 @@ void apply_region_overlay( const JsonObject &jo, regional_settings &region )
         }
     };
     load_building_types( "houses", region.city_spec.houses );
-    load_building_types( "basements", region.city_spec.basements );
     load_building_types( "shops", region.city_spec.shops );
     load_building_types( "parks", region.city_spec.parks );
 
@@ -705,6 +739,8 @@ void apply_region_overlay( const JsonObject &jo, regional_settings &region )
     load_overmap_forest_settings( jo, region.overmap_forest, false, true );
 
     load_overmap_lake_settings( jo, region.overmap_lake, false, true );
+
+    load_overmap_ravine_settings( jo, region.overmap_ravine, false, true );
 
     load_region_terrain_and_furniture_settings( jo, region.region_terrain_and_furniture, false, true );
 }
@@ -835,7 +871,7 @@ ter_furn_id forest_biome::pick() const
     // If a given component does not roll as success, proceed to the next feature in sequence until
     // a feature is picked or none are picked, in which case an empty feature is returned.
     const ter_furn_id *result = nullptr;
-    for( auto &pr : biome_components ) {
+    for( const forest_biome_component &pr : biome_components ) {
         if( one_in( pr.chance ) ) {
             result = pr.types.pick();
             break;
@@ -895,6 +931,8 @@ void forest_trail_settings::finalize()
         }
         trail_terrain.add( tid.id(), pr.second );
     }
+
+    trailheads.finalize();
 }
 
 void overmap_lake_settings::finalize()
@@ -1001,7 +1039,6 @@ void regional_settings::finalize()
 void city_settings::finalize()
 {
     houses.finalize();
-    basements.finalize();
     shops.finalize();
     parks.finalize();
 }
@@ -1042,7 +1079,7 @@ void building_bin::finalize()
         return;
     }
     if( unfinalized_buildings.empty() ) {
-        debugmsg( "There must be at least one house, shop, and park for each regional map setting used." );
+        debugmsg( "There must be at least one entry in this building bin." );
         return;
     }
 

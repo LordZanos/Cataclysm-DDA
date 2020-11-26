@@ -1,21 +1,30 @@
+#include "catch/catch.hpp"
+#include "item.h"
+
+#include <cmath>
 #include <initializer_list>
 #include <limits>
-#include <list>
+#include <memory>
+#include <vector>
 
-#include "catch/catch.hpp"
 #include "calendar.h"
-#include "itype.h"
-#include "ret_val.h"
-#include "units.h"
-#include "item.h"
 #include "enums.h"
-#include "optional.h"
+#include "item_factory.h"
+#include "item_pocket.h"
+#include "itype.h"
+#include "math_defines.h"
+#include "monstergenerator.h"
+#include "mtype.h"
+#include "ret_val.h"
+#include "type_id.h"
+#include "units.h"
+#include "value_ptr.h"
 
 TEST_CASE( "item_volume", "[item]" )
 {
     // Need to pick some item here which is count_by_charges and for which each
     // charge is at least 1_ml.  Battery works for now.
-    item i( "battery", 0, item::default_charges_tag() );
+    item i( "battery", calendar::turn_zero, item::default_charges_tag() );
     REQUIRE( i.count_by_charges() );
     // Would be better with Catch2 generators
     const units::volume big_volume = units::from_milliliter( std::numeric_limits<int>::max() / 2 );
@@ -33,11 +42,11 @@ TEST_CASE( "item_volume", "[item]" )
 
 TEST_CASE( "simple_item_layers", "[item]" )
 {
-    CHECK( item( "arm_warmers" ).get_layer() == UNDERWEAR_LAYER );
-    CHECK( item( "10gal_hat" ).get_layer() == REGULAR_LAYER );
-    CHECK( item( "baldric" ).get_layer() == WAIST_LAYER );
-    CHECK( item( "aep_suit" ).get_layer() == OUTER_LAYER );
-    CHECK( item( "2byarm_guard" ).get_layer() == BELTED_LAYER );
+    CHECK( item( "arm_warmers" ).get_layer() == layer_level::UNDERWEAR );
+    CHECK( item( "10gal_hat" ).get_layer() == layer_level::REGULAR );
+    CHECK( item( "baldric" ).get_layer() == layer_level::WAIST );
+    CHECK( item( "aep_suit" ).get_layer() == layer_level::OUTER );
+    CHECK( item( "2byarm_guard" ).get_layer() == layer_level::BELTED );
 }
 
 TEST_CASE( "gun_layer", "[item]" )
@@ -45,8 +54,8 @@ TEST_CASE( "gun_layer", "[item]" )
     item gun( "win70" );
     item mod( "shoulder_strap" );
     CHECK( gun.is_gunmod_compatible( mod ).success() );
-    gun.contents.push_back( mod );
-    CHECK( gun.get_layer() == BELTED_LAYER );
+    gun.put_in( mod, item_pocket::pocket_type::MOD );
+    CHECK( gun.get_layer() == layer_level::BELTED );
 }
 
 TEST_CASE( "stacking_cash_cards", "[item]" )
@@ -155,5 +164,88 @@ TEST_CASE( "stacking_over_time", "[item]" )
                 CHECK( !A.stacks_with( B ) );
             }
         }
+    }
+}
+
+TEST_CASE( "liquids at different temperatures", "[item][temperature][stack][combine]" )
+{
+    item liquid_hot( "test_liquid" );
+    item liquid_cold( "test_liquid" );
+    item liquid_filthy( "test_liquid" );
+
+    // heat_up/cold_up sets temperature of item and corresponding HOT/COLD flags
+    liquid_hot.heat_up(); // 60 C (333.15 K)
+    liquid_cold.cold_up(); // 3 C (276.15 K)
+    liquid_filthy.cold_up(); // 3 C (276.15 K)
+    liquid_filthy.set_flag( flag_id( "FILTHY" ) );
+
+    // Temperature is in terms of 0.000001 K
+    REQUIRE( std::floor( liquid_hot.temperature / 100000 ) == 333 );
+    REQUIRE( std::floor( liquid_cold.temperature / 100000 ) == 276 );
+    REQUIRE( liquid_hot.has_flag( flag_id( "HOT" ) ) );
+    REQUIRE( liquid_cold.has_flag( flag_id( "COLD" ) ) );
+
+    SECTION( "liquids at the same temperature can stack together" ) {
+        CHECK( liquid_cold.stacks_with( liquid_cold ) );
+        CHECK( liquid_hot.stacks_with( liquid_hot ) );
+    }
+
+    SECTION( "liquids at different temperature do not stack" ) {
+        // Items with different flags do not stack
+        CHECK_FALSE( liquid_cold.stacks_with( liquid_hot ) );
+        CHECK_FALSE( liquid_hot.stacks_with( liquid_cold ) );
+    }
+
+    SECTION( "liquids at different temperature can be combined" ) {
+        CHECK( liquid_cold.can_combine( liquid_hot ) );
+        CHECK( liquid_hot.can_combine( liquid_cold ) );
+    }
+
+    SECTION( "liquids with different flags can not be combined" ) {
+        CHECK( !liquid_cold.can_combine( liquid_filthy ) );
+        CHECK( !liquid_filthy.can_combine( liquid_cold ) );
+    }
+}
+
+static void assert_minimum_length_to_volume_ratio( const item &target )
+{
+    if( target.type->get_id().is_null() ) {
+        return;
+    }
+    CAPTURE( target.type->get_id() );
+    CAPTURE( target.volume() );
+    CAPTURE( target.base_volume() );
+    CAPTURE( target.type->volume );
+    if( target.made_of( phase_id::LIQUID ) || target.is_soft() ) {
+        CHECK( target.length() == 0_mm );
+        return;
+    }
+    if( target.volume() == 0_ml ) {
+        CHECK( target.length() == -1_mm );
+        return;
+    }
+    if( target.volume() == 1_ml ) {
+        CHECK( target.length() >= 0_mm );
+        return;
+    }
+    // Minimum possible length is if the item is a sphere.
+    const float minimal_diameter = std::cbrt( ( 3.0 * units::to_milliliter( target.base_volume() ) ) /
+                                   ( 4.0 * M_PI ) );
+    CHECK( units::to_millimeter( target.length() ) >= minimal_diameter * 10.0 );
+}
+
+TEST_CASE( "item length sanity check", "[item]" )
+{
+    for( const itype *type : item_controller->all() ) {
+        const item sample( type, calendar::turn_zero, item::solitary_tag {} );
+        assert_minimum_length_to_volume_ratio( sample );
+    }
+}
+
+TEST_CASE( "corpse length sanity check", "[item]" )
+{
+    for( const mtype &type : MonsterGenerator::generator().get_all_mtypes() ) {
+        const item sample = item::make_corpse( type.id );
+        assert_minimum_length_to_volume_ratio( sample );
     }
 }

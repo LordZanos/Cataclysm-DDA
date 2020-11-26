@@ -1,24 +1,24 @@
 #include "color.h"
 
-#include <cstdlib>
 #include <algorithm> // for std::count
+#include <cstdlib>
 #include <iterator>
 #include <map>
-#include <ostream>
 #include <vector>
 
 #include "cata_utility.h"
+#include "cursesdef.h"
 #include "debug.h"
 #include "filesystem.h"
 #include "input.h"
 #include "json.h"
 #include "output.h"
 #include "path_info.h"
+#include "point.h"
 #include "rng.h"
 #include "string_formatter.h"
-#include "translations.h"
 #include "ui.h"
-#include "cursesdef.h"
+#include "ui_manager.h"
 
 void nc_color::serialize( JsonOut &jsout ) const
 {
@@ -36,7 +36,7 @@ color_manager &get_all_colors()
     return single_instance;
 }
 
-std::unordered_map<std::string, note_color> color_by_string_map;
+static std::unordered_map<std::string, note_color> color_by_string_map;
 
 void color_manager::finalize()
 {
@@ -56,15 +56,15 @@ void color_manager::finalize()
 
         if( !entry.name_custom.empty() ) {
             // Not using name_to_color because we want default color of this name
-            const auto id = name_to_id( entry.name_custom );
+            const color_id id = name_to_id( entry.name_custom );
             auto &other = color_array[id];
             entry.custom = other.color;
         }
 
         if( !entry.name_invert_custom.empty() ) {
-            const auto id = name_to_id( entry.name_invert_custom );
+            const color_id id = name_to_id( entry.name_invert_custom );
             auto &other = color_array[id];
-            entry.custom = other.color;
+            entry.invert_custom = other.color;
         }
 
         inverted_map[entry.color] = entry.col_id;
@@ -89,8 +89,8 @@ void color_manager::finalize()
 
 nc_color color_manager::name_to_color( const std::string &name ) const
 {
-    const auto id = name_to_id( name );
-    auto &entry = color_array[id];
+    const color_id id = name_to_id( name );
+    const color_struct &entry = color_array[id];
 
     return entry.custom > 0 ? entry.custom : entry.color;
 }
@@ -137,7 +137,7 @@ nc_color color_manager::get( const color_id id ) const
         return nc_color();
     }
 
-    auto &entry = color_array[id];
+    const auto &entry = color_array[id];
 
     return entry.custom > 0 ? entry.custom : entry.color;
 }
@@ -151,7 +151,7 @@ std::string color_manager::get_name( const nc_color &color ) const
 nc_color color_manager::get_invert( const nc_color &color ) const
 {
     const color_id id = color_to_id( color );
-    auto &entry = color_array[id];
+    const color_struct &entry = color_array[id];
 
     return entry.invert_custom > 0 ? entry.invert_custom : entry.invert;
 }
@@ -474,13 +474,13 @@ void init_colors()
 
     // The short color codes (e.g. "br") are intentionally untranslatable.
     color_by_string_map = {
-        {"br", {c_brown, translate_marker( "brown" )}}, {"lg", {c_light_gray, translate_marker( "light gray" )}},
-        {"dg", {c_dark_gray, translate_marker( "dark gray" )}}, {"r", {c_light_red, translate_marker( "light red" )}},
-        {"R", {c_red, translate_marker( "red" )}}, {"g", {c_light_green, translate_marker( "light green" )}},
-        {"G", {c_green, translate_marker( "green" )}}, {"b", {c_light_blue, translate_marker( "light blue" )}},
-        {"B", {c_blue, translate_marker( "blue" )}}, {"W", {c_white, translate_marker( "white" )}},
-        {"C", {c_cyan, translate_marker( "cyan" )}}, {"c", {c_light_cyan, translate_marker( "light cyan" )}},
-        {"P", {c_pink, translate_marker( "pink" )}}, {"m", {c_magenta, translate_marker( "magenta" )}}
+        {"br", {c_brown, to_translation( "brown" )}}, {"lg", {c_light_gray, to_translation( "light gray" )}},
+        {"dg", {c_dark_gray, to_translation( "dark gray" )}}, {"r", {c_light_red, to_translation( "light red" )}},
+        {"R", {c_red, to_translation( "red" )}}, {"g", {c_light_green, to_translation( "light green" )}},
+        {"G", {c_green, to_translation( "green" )}}, {"b", {c_light_blue, to_translation( "light blue" )}},
+        {"B", {c_blue, to_translation( "blue" )}}, {"W", {c_white, to_translation( "white" )}},
+        {"C", {c_cyan, to_translation( "cyan" )}}, {"c", {c_light_cyan, to_translation( "light cyan" )}},
+        {"P", {c_pink, to_translation( "pink" )}}, {"m", {c_magenta, to_translation( "magenta" )}}
     };
 }
 
@@ -653,7 +653,7 @@ std::string colorize( const translation &text, const nc_color &color )
 
 std::string get_note_string_from_color( const nc_color &color )
 {
-    for( auto i : color_by_string_map ) {
+    for( const std::pair<const std::string, note_color> &i : color_by_string_map ) {
         if( i.second.color == color ) {
             return i.first;
         }
@@ -672,13 +672,9 @@ nc_color get_note_color( const std::string &note_id )
     return c_yellow;
 }
 
-std::list<std::pair<std::string, std::string>> get_note_color_names()
+const std::unordered_map<std::string, note_color> &get_note_color_names()
 {
-    std::list<std::pair<std::string, std::string>> color_list;
-    for( const auto &color_pair : color_by_string_map ) {
-        color_list.emplace_back( color_pair.first, color_pair.second.name );
-    }
-    return color_list;
+    return color_by_string_map;
 }
 
 void color_manager::clear()
@@ -712,16 +708,15 @@ static void draw_header( const catacurses::window &w )
     mvwprintz( w, point( 21, 3 ), c_white, _( "Normal" ) );
     mvwprintz( w, point( 52, 3 ), c_white, _( "Invert" ) );
 
-    wrefresh( w );
+    wnoutrefresh( w );
 }
 
 void color_manager::show_gui()
 {
     const int iHeaderHeight = 4;
-    const int iContentHeight = FULL_SCREEN_HEIGHT - 2 - iHeaderHeight;
+    int iContentHeight = 0;
 
-    const int iOffsetX = TERMX > FULL_SCREEN_WIDTH ? ( TERMX - FULL_SCREEN_WIDTH ) / 2 : 0;
-    const int iOffsetY = TERMY > FULL_SCREEN_HEIGHT ? ( TERMY - FULL_SCREEN_HEIGHT ) / 2 : 0;
+    point iOffset;
 
     std::vector<int> vLines;
     vLines.push_back( -1 );
@@ -729,37 +724,33 @@ void color_manager::show_gui()
 
     const int iTotalCols = vLines.size();
 
-    catacurses::window w_colors_border = catacurses::newwin( FULL_SCREEN_HEIGHT, FULL_SCREEN_WIDTH,
-                                         point( iOffsetX, iOffsetY ) );
-    catacurses::window w_colors_header = catacurses::newwin( iHeaderHeight, FULL_SCREEN_WIDTH - 2,
-                                         point( 1 + iOffsetX, 1 + iOffsetY ) );
-    catacurses::window w_colors = catacurses::newwin( iContentHeight, FULL_SCREEN_WIDTH - 2,
-                                  point( 1 + iOffsetX, iHeaderHeight + 1 + iOffsetY ) );
+    catacurses::window w_colors_border;
+    catacurses::window w_colors_header;
+    catacurses::window w_colors;
 
-    /**
-     * All of the stuff in this lambda needs to be drawn (1) initially, and
-     * (2) after closing the HELP_KEYBINDINGS window (since it mangles the screen)
-    */
-    const auto initial_draw = [&]() {
-        draw_border( w_colors_border, BORDER_COLOR, _( " COLOR MANAGER " ) );
-        mvwputch( w_colors_border, point( 0, 3 ), BORDER_COLOR, LINE_XXXO ); // |-
-        mvwputch( w_colors_border, point( getmaxx( w_colors_border ) - 1, 3 ), BORDER_COLOR,
-                  LINE_XOXX ); // -|
-
-        for( auto &iCol : vLines ) {
-            if( iCol > -1 ) {
-                mvwputch( w_colors_border, point( iCol + 1, FULL_SCREEN_HEIGHT - 1 ), BORDER_COLOR,
-                          LINE_XXOX ); // _|_
-                mvwputch( w_colors_header, point( iCol, 3 ), BORDER_COLOR, LINE_XOXO );
-            }
-        }
-        wrefresh( w_colors_border );
-
-        draw_header( w_colors_header );
-
+    const auto calc_offset_y = []() -> int {
+        return TERMY > FULL_SCREEN_HEIGHT ? ( TERMY - FULL_SCREEN_HEIGHT ) / 2 : 0;
     };
 
-    initial_draw();
+    ui_adaptor ui;
+    const auto init_windows = [&]( ui_adaptor & ui ) {
+        iContentHeight = FULL_SCREEN_HEIGHT - 2 - iHeaderHeight;
+
+        iOffset.x = TERMX > FULL_SCREEN_WIDTH ? ( TERMX - FULL_SCREEN_WIDTH ) / 2 : 0;
+        iOffset.y = calc_offset_y();
+
+        w_colors_border = catacurses::newwin( FULL_SCREEN_HEIGHT, FULL_SCREEN_WIDTH,
+                                              iOffset );
+        w_colors_header = catacurses::newwin( iHeaderHeight, FULL_SCREEN_WIDTH - 2,
+                                              iOffset + point_south_east );
+        w_colors = catacurses::newwin( iContentHeight, FULL_SCREEN_WIDTH - 2,
+                                       iOffset + point( 1, iHeaderHeight + 1 ) );
+
+        ui.position_from_window( w_colors_border );
+    };
+    init_windows( ui );
+    ui.on_screen_resize( init_windows );
+
     int iCurrentLine = 0;
     int iCurrentCol = 1;
     int iStartPos = 0;
@@ -767,6 +758,8 @@ void color_manager::show_gui()
     bool bStuffChanged = false;
     input_context ctxt( "COLORS" );
     ctxt.register_cardinal();
+    ctxt.register_action( "PAGE_UP", to_translation( "Fast scroll up" ) );
+    ctxt.register_action( "PAGE_DOWN", to_translation( "Fast scroll down" ) );
     ctxt.register_action( "CONFIRM" );
     ctxt.register_action( "QUIT" );
     ctxt.register_action( "REMOVE_CUSTOM" );
@@ -779,7 +772,23 @@ void color_manager::show_gui()
         name_color_map[pr.first] = color_array[pr.second];
     }
 
-    while( true ) {
+    ui.on_redraw( [&]( const ui_adaptor & ) {
+        draw_border( w_colors_border, BORDER_COLOR, _( " COLOR MANAGER " ) );
+        mvwputch( w_colors_border, point( 0, 3 ), BORDER_COLOR, LINE_XXXO ); // |-
+        mvwputch( w_colors_border, point( getmaxx( w_colors_border ) - 1, 3 ), BORDER_COLOR,
+                  LINE_XOXX ); // -|
+
+        for( auto &iCol : vLines ) {
+            if( iCol > -1 ) {
+                mvwputch( w_colors_border, point( iCol + 1, FULL_SCREEN_HEIGHT - 1 ), BORDER_COLOR,
+                          LINE_XXOX ); // _|_
+                mvwputch( w_colors_header, point( iCol, 3 ), BORDER_COLOR, LINE_XOXO );
+            }
+        }
+        wnoutrefresh( w_colors_border );
+
+        draw_header( w_colors_header );
+
         // Clear all lines
         for( int i = 0; i < iContentHeight; i++ ) {
             for( int j = 0; j < 79; j++ ) {
@@ -796,12 +805,10 @@ void color_manager::show_gui()
         calcStartPos( iStartPos, iCurrentLine, iContentHeight, iMaxColors );
 
         draw_scrollbar( w_colors_border, iCurrentLine, iContentHeight, iMaxColors, point( 0, 5 ) );
-        wrefresh( w_colors_border );
+        wnoutrefresh( w_colors_border );
 
         auto iter = name_color_map.begin();
         std::advance( iter, iStartPos );
-
-        std::string sActive;
 
         // display color manager
         for( int i = iStartPos; iter != name_color_map.end(); ++iter, ++i ) {
@@ -810,7 +817,6 @@ void color_manager::show_gui()
                 auto &entry = iter->second;
 
                 if( iCurrentLine == i ) {
-                    sActive = iter->first;
                     mvwprintz( w_colors, point( vLines[iCurrentCol - 1] + 2, i - iStartPos ), c_yellow, ">" );
                 }
 
@@ -832,21 +838,42 @@ void color_manager::show_gui()
             }
         }
 
-        wrefresh( w_colors );
+        wnoutrefresh( w_colors );
+    } );
+
+    while( true ) {
+        ui_manager::redraw();
 
         const std::string action = ctxt.handle_input();
-
+        const int recmax = iMaxColors;
+        const int scroll_rate = recmax > 20 ? 10 : 3;
         if( action == "QUIT" ) {
             break;
         } else if( action == "UP" ) {
             iCurrentLine--;
             if( iCurrentLine < 0 ) {
-                iCurrentLine = iMaxColors - 1;
+                iCurrentLine = recmax - 1;
             }
         } else if( action == "DOWN" ) {
             iCurrentLine++;
-            if( iCurrentLine >= static_cast<int>( iMaxColors ) ) {
+            if( iCurrentLine >= recmax ) {
                 iCurrentLine = 0;
+            }
+        } else if( action == "PAGE_DOWN" ) {
+            if( iCurrentLine == recmax - 1 ) {
+                iCurrentLine = 0;
+            } else if( iCurrentLine + scroll_rate >= recmax ) {
+                iCurrentLine = recmax - 1;
+            } else {
+                iCurrentLine += +scroll_rate;
+            }
+        } else if( action == "PAGE_UP" ) {
+            if( iCurrentLine == 0 ) {
+                iCurrentLine = recmax - 1;
+            } else if( iCurrentLine <= scroll_rate ) {
+                iCurrentLine = 0;
+            } else {
+                iCurrentLine += -scroll_rate;
             }
         } else if( action == "LEFT" ) {
             iCurrentCol--;
@@ -859,7 +886,7 @@ void color_manager::show_gui()
                 iCurrentCol = 1;
             }
         } else if( action == "REMOVE_CUSTOM" ) {
-            auto &entry = name_color_map[sActive];
+            auto &entry = std::next( name_color_map.begin(), iCurrentLine )->second;
 
             if( iCurrentCol == 1 && !entry.name_custom.empty() ) {
                 bStuffChanged = true;
@@ -878,8 +905,10 @@ void color_manager::show_gui()
 
             if( !vFiles.empty() ) {
                 uilist ui_templates;
-                ui_templates.w_y = iHeaderHeight + 1 + iOffsetY;
-                ui_templates.w_height = 18;
+                ui_templates.w_y_setup = [&]( int ) -> int {
+                    return iHeaderHeight + 1 + calc_offset_y();
+                };
+                ui_templates.w_height_setup = 18;
 
                 ui_templates.text = _( "Color templates:" );
 
@@ -908,15 +937,19 @@ void color_manager::show_gui()
 
         } else if( action == "CONFIRM" ) {
             uilist ui_colors;
-            ui_colors.w_y = iHeaderHeight + 1 + iOffsetY;
-            ui_colors.w_height = 18;
+            ui_colors.w_y_setup = [&]( int ) -> int {
+                return iHeaderHeight + 1 + calc_offset_y();
+            };
+            ui_colors.w_height_setup = 18;
+
+            const auto &entry = std::next( name_color_map.begin(), iCurrentLine )->second;
 
             std::string sColorType = _( "Normal" );
-            std::string sSelected = name_color_map[sActive].name_custom;
+            std::string sSelected = entry.name_custom;
 
             if( iCurrentCol == 2 ) {
                 sColorType = _( "Invert" );
-                sSelected = name_color_map[sActive].name_invert_custom;
+                sSelected = entry.name_invert_custom;
 
             }
 
@@ -944,15 +977,14 @@ void color_manager::show_gui()
             }
 
             ui_colors.query();
-            initial_draw();
 
             if( ui_colors.ret >= 0 && static_cast<size_t>( ui_colors.ret ) < name_color_map.size() ) {
                 bStuffChanged = true;
 
-                iter = name_color_map.begin();
+                auto iter = name_color_map.begin();
                 std::advance( iter, ui_colors.ret );
 
-                auto &entry = name_color_map[sActive];
+                auto &entry = std::next( name_color_map.begin(), iCurrentLine )->second;
 
                 if( iCurrentCol == 1 ) {
                     entry.name_custom = iter->first;
@@ -964,8 +996,6 @@ void color_manager::show_gui()
             }
 
             finalize(); // Need to recalculate caches
-        } else if( action == "HELP_KEYBINDINGS" ) {
-            initial_draw();
         }
     }
 
@@ -1008,7 +1038,7 @@ void color_manager::load_custom( const std::string &sPath )
 void color_manager::serialize( JsonOut &json ) const
 {
     json.start_array();
-    for( auto &entry : color_array ) {
+    for( const color_struct &entry : color_array ) {
         if( !entry.name_custom.empty() || !entry.name_invert_custom.empty() ) {
             json.start_object();
 

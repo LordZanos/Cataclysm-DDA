@@ -1,10 +1,12 @@
 #include "mod_manager.h"
 
-#include <queue>
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <ostream>
+#include <queue>
 
+#include "assign.h"
 #include "cata_utility.h"
 #include "debug.h"
 #include "dependency_tree.h"
@@ -12,9 +14,8 @@
 #include "json.h"
 #include "path_info.h"
 #include "string_formatter.h"
-#include "translations.h"
+#include "string_id.h"
 #include "worldfactory.h"
-#include "assign.h"
 
 static const std::string MOD_SEARCH_FILE( "modinfo.json" );
 
@@ -44,37 +45,37 @@ std::string MOD_INFORMATION::name() const
         //~ name of a mod that has no name entry, (%s is the mods identifier)
         return string_format( _( "No name (%s)" ), ident.c_str() );
     } else {
-        return _( name_ );
+        return name_.translated();
     }
 }
 
 // These accessors are to delay the initialization of the strings in the respective containers until after gettext is initialized.
-const std::vector<std::pair<std::string, std::string> > &get_mod_list_categories()
+const std::vector<std::pair<std::string, translation>> &get_mod_list_categories()
 {
-    static const std::vector<std::pair<std::string, std::string> > mod_list_categories = {
-        {"content", translate_marker( "CORE CONTENT PACKS" )},
-        {"items", translate_marker( "ITEM ADDITION MODS" )},
-        {"creatures", translate_marker( "CREATURE MODS" )},
-        {"misc_additions", translate_marker( "MISC ADDITIONS" )},
-        {"buildings", translate_marker( "BUILDINGS MODS" )},
-        {"vehicles", translate_marker( "VEHICLE MODS" )},
-        {"rebalance", translate_marker( "REBALANCING MODS" )},
-        {"magical", translate_marker( "MAGICAL MODS" )},
-        {"item_exclude", translate_marker( "ITEM EXCLUSION MODS" )},
-        {"monster_exclude", translate_marker( "MONSTER EXCLUSION MODS" )},
-        {"graphical", translate_marker( "GRAPHICAL MODS" )},
-        {"", translate_marker( "NO CATEGORY" )}
+    static const std::vector<std::pair<std::string, translation>> mod_list_categories = {
+        {"content", to_translation( "CORE CONTENT PACKS" )},
+        {"items", to_translation( "ITEM ADDITION MODS" )},
+        {"creatures", to_translation( "CREATURE MODS" )},
+        {"misc_additions", to_translation( "MISC ADDITIONS" )},
+        {"buildings", to_translation( "BUILDINGS MODS" )},
+        {"vehicles", to_translation( "VEHICLE MODS" )},
+        {"rebalance", to_translation( "REBALANCING MODS" )},
+        {"magical", to_translation( "MAGICAL MODS" )},
+        {"item_exclude", to_translation( "ITEM EXCLUSION MODS" )},
+        {"monster_exclude", to_translation( "MONSTER EXCLUSION MODS" )},
+        {"graphical", to_translation( "GRAPHICAL MODS" )},
+        {"", to_translation( "NO CATEGORY" )}
     };
 
     return mod_list_categories;
 }
 
-const std::vector<std::pair<std::string, std::string> > &get_mod_list_tabs()
+const std::vector<std::pair<std::string, translation>> &get_mod_list_tabs()
 {
-    static const std::vector<std::pair<std::string, std::string> > mod_list_tabs = {
-        {"tab_default", translate_marker( "Default" )},
-        {"tab_blacklist", translate_marker( "Blacklist" )},
-        {"tab_balance", translate_marker( "Balance" )}
+    static const std::vector<std::pair<std::string, translation>> mod_list_tabs = {
+        {"tab_default", to_translation( "Default" )},
+        {"tab_blacklist", to_translation( "Blacklist" )},
+        {"tab_balance", to_translation( "Balance" )}
     };
 
     return mod_list_tabs;
@@ -96,7 +97,7 @@ void mod_manager::load_replacement_mods( const std::string &path )
     read_from_file_optional_json( path, [&]( JsonIn & jsin ) {
         jsin.start_array();
         while( !jsin.end_array() ) {
-            auto arr = jsin.get_array();
+            JsonArray arr = jsin.get_array();
             mod_replacements.emplace( mod_id( arr.get_string( 0 ) ),
                                       mod_id( arr.size() > 1 ? arr.get_string( 1 ) : "" ) );
         }
@@ -149,8 +150,8 @@ void mod_manager::refresh_mod_list()
         load_mod_info( PATH_INFO::mods_user_default() );
     }
 
-    if( set_default_mods( mod_id( "user:default" ) ) ) {
-    } else if( set_default_mods( mod_id( "dev:default" ) ) ) {
+    if( !set_default_mods( mod_id( "user:default" ) ) ) {
+        set_default_mods( mod_id( "dev:default" ) );
     }
     // remove these mods from the list, so they do not appear to the user
     remove_mod( mod_id( "user:default" ) );
@@ -206,7 +207,8 @@ void mod_manager::load_modfile( const JsonObject &jo, const std::string &path )
         return;
     }
 
-    const mod_id m_ident( jo.get_string( "ident" ) );
+    // TEMPORARY until 0.G: Remove "ident" support
+    const mod_id m_ident( jo.has_string( "ident" ) ? jo.get_string( "ident" ) : jo.get_string( "id" ) );
     // can't use string_id::is_valid as the global mod_manger instance does not exist yet
     if( mod_map.count( m_ident ) > 0 ) {
         // TODO: change this to make unique ident for the mod
@@ -215,10 +217,11 @@ void mod_manager::load_modfile( const JsonObject &jo, const std::string &path )
         return;
     }
 
-    const std::string m_name = jo.get_string( "name", "" );
+    translation m_name;
+    jo.read( "name", m_name );
 
     std::string m_cat = jo.get_string( "category", "" );
-    std::pair<int, std::string> p_cat = {-1, ""};
+    std::pair<int, translation> p_cat = {-1, translation()};
     bool bCatFound = false;
 
     do {
@@ -274,7 +277,7 @@ bool mod_manager::set_default_mods( const t_mod_list &mods )
         JsonOut json( fout, true ); // pretty-print
         json.start_object();
         json.member( "type", "MOD_INFO" );
-        json.member( "ident", "user:default" );
+        json.member( "id", "user:default" );
         json.member( "dependencies" );
         json.write( mods );
         json.end_object();
@@ -431,11 +434,11 @@ const mod_manager::t_mod_list &mod_manager::get_default_mods() const
     return default_mods;
 }
 
-inline bool compare_mod_by_name_and_category( const MOD_INFORMATION *const a,
+static inline bool compare_mod_by_name_and_category( const MOD_INFORMATION *const a,
         const MOD_INFORMATION *const b )
 {
-    return ( a->category < b->category ) || ( ( a->category == b->category ) &&
-            ( a->name() < b->name() ) );
+    return localized_compare( std::make_pair( a->category, a->name() ),
+                              std::make_pair( b->category, b->name() ) );
 }
 
 void mod_manager::set_usable_mods()

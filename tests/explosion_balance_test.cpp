@@ -1,54 +1,65 @@
-#include <sstream>
-#include <algorithm>
+#include "catch/catch.hpp"
+
+#include <cstddef>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "avatar.h"
-#include "catch/catch.hpp"
+#include "creature.h"
 #include "game.h"
 #include "item.h"
 #include "itype.h"
 #include "line.h"
 #include "map.h"
 #include "map_helpers.h"
-#include "test_statistics.h"
-#include "vehicle.h"
-#include "veh_type.h"
-#include "vpart_position.h"
-#include "creature.h"
-#include "string_id.h"
-#include "type_id.h"
 #include "point.h"
+#include "test_statistics.h"
+#include "type_id.h"
+#include "veh_type.h"
+#include "vehicle.h"
+#include "vpart_position.h"
+#include "vpart_range.h"
+
+static const vpart_id vpart_battery_car( "battery_car" );
+static const vpart_id vpart_headlight( "headlight" );
+static const vpart_id vpart_vehicle_clock( "vehicle_clock" );
+static const vpart_id vpart_windshield( "windshield" );
+
+enum class outcome_type {
+    Kill, Casualty
+};
 
 static void check_lethality( const std::string &explosive_id, const int range, float lethality,
-                             float margin )
+                             float margin, outcome_type expected_outcome )
 {
     const epsilon_threshold target_lethality{ lethality, margin };
     int num_survivors = 0;
     int num_subjects = 0;
     int num_wounded = 0;
-    statistics<bool> deaths;
+    statistics<bool> victims;
     std::stringstream survivor_stats;
     int total_hp = 0;
+    clear_map_and_put_player_underground();
     do {
-        // Clear map
-        clear_map_and_put_player_underground();
+        clear_creatures();
         // Spawn some monsters in a circle.
         tripoint origin( 30, 30, 0 );
         int num_subjects_this_time = 0;
-        for( const tripoint &monster_position : closest_tripoints_first( origin, range ) ) {
+        for( const tripoint &monster_position : closest_points_first( origin, range ) ) {
             if( rl_dist( monster_position, origin ) != range ) {
                 continue;
             }
             num_subjects++;
             num_subjects_this_time++;
-            spawn_test_monster( "mon_zombie", monster_position );
+            monster &new_monster = spawn_test_monster( "mon_zombie", monster_position );
+            new_monster.no_extra_death_drops = true;
         }
         // Set off an explosion
         item grenade( explosive_id );
         grenade.charges = 0;
-        grenade.type->invoke( g->u, grenade, origin );
+        grenade.type->invoke( get_avatar(), grenade, origin );
         // see how many monsters survive
         std::vector<Creature *> survivors = g->get_creatures_if( []( const Creature & critter ) {
             return critter.is_monster();
@@ -56,17 +67,22 @@ static void check_lethality( const std::string &explosive_id, const int range, f
         num_survivors += survivors.size();
         for( Creature *survivor : survivors ) {
             survivor_stats << survivor->pos() << " " << survivor->get_hp() << ", ";
-            num_wounded += ( survivor->get_hp() < survivor->get_hp_max() ) ? 1 : 0;
+            bool wounded = survivor->get_hp() < survivor->get_hp_max();
+            num_wounded += wounded ? 1 : 0;
             total_hp += survivor->get_hp();
-            deaths.add( false );
+            if( expected_outcome == outcome_type::Casualty && wounded ) {
+                victims.add( true );
+            } else {
+                victims.add( false );
+            }
         }
         if( !survivors.empty() ) {
             survivor_stats << std::endl;
         }
         for( int i = survivors.size(); i < num_subjects_this_time; ++i ) {
-            deaths.add( true );
+            victims.add( true );
         }
-    } while( deaths.uncertain_about( target_lethality ) );
+    } while( victims.uncertain_about( target_lethality ) );
     CAPTURE( margin );
     INFO( explosive_id );
     INFO( "range " << range );
@@ -75,15 +91,15 @@ static void check_lethality( const std::string &explosive_id, const int range, f
     INFO( "Wounded survivors: " << num_wounded );
     const int average_hp = num_survivors ? total_hp / num_survivors : 0;
     INFO( "average hp of survivors: " << average_hp );
-    CHECK( deaths.avg() == Approx( lethality ).margin( margin ) );
+    CHECK( victims.avg() == Approx( lethality ).margin( margin ) );
 }
 
 static std::vector<int> get_part_hp( vehicle *veh )
 {
     std::vector<int> part_hp;
-    part_hp.reserve( veh->parts.size() );
-    for( vehicle_part &part : veh->parts ) {
-        part_hp.push_back( part.hp() );
+    part_hp.reserve( veh->part_count() );
+    for( const vpart_reference &vpr : veh->get_all_parts() ) {
+        part_hp.push_back( vpr.part().hp() );
     }
     return part_hp;
 }
@@ -95,10 +111,11 @@ static void check_vehicle_damage( const std::string &explosive_id, const std::st
     clear_map_and_put_player_underground();
     tripoint origin( 30, 30, 0 );
 
-    vehicle *target_vehicle = g->m.add_vehicle( vproto_id( vehicle_id ), origin, 0, -1, 0 );
+    vehicle *target_vehicle = get_map().add_vehicle( vproto_id( vehicle_id ), origin, 0_degrees,
+                              -1, 0 );
     std::vector<int> before_hp = get_part_hp( target_vehicle );
 
-    while( g->m.veh_at( origin ) ) {
+    while( get_map().veh_at( origin ) ) {
         origin.x++;
     }
     origin.x += range;
@@ -106,27 +123,29 @@ static void check_vehicle_damage( const std::string &explosive_id, const std::st
     // Set off an explosion
     item grenade( explosive_id );
     grenade.charges = 0;
-    grenade.type->invoke( g->u, grenade, origin );
+    grenade.type->invoke( get_avatar(), grenade, origin );
 
     std::vector<int> after_hp = get_part_hp( target_vehicle );
 
     // We don't expect any destroyed parts.
     REQUIRE( before_hp.size() == after_hp.size() );
     for( size_t i = 0; i < before_hp.size(); ++i ) {
-        INFO( target_vehicle->parts[ i ].name() );
-        if( target_vehicle->parts[ i ].info().get_id() == "windshield" ||
-            target_vehicle->parts[ i ].info().get_id() == "headlight" ) {
+        CAPTURE( i );
+        INFO( target_vehicle->part( i ).name() );
+        if( target_vehicle->part( i ).info().get_id() == vpart_battery_car ||
+            target_vehicle->part( i ).info().get_id() == vpart_headlight ||
+            target_vehicle->part( i ).info().get_id() == vpart_windshield ) {
             CHECK( before_hp[ i ] >= after_hp[ i ] );
-        } else if( !( target_vehicle->parts[ i ].info().get_id() == "vehicle_clock" ) ) {
+        } else if( !( target_vehicle->part( i ).info().get_id() == vpart_vehicle_clock ) ) {
             CHECK( before_hp[ i ] == after_hp[ i ] );
         }
     }
 }
 
-TEST_CASE( "grenade_lethality", "[grenade],[explosion],[balance]" )
+TEST_CASE( "grenade_lethality", "[grenade],[explosion],[balance],[slow]" )
 {
-    check_lethality( "grenade_act", 5, 0.95, 0.06 );
-    check_lethality( "grenade_act", 15, 0.40, 0.06 );
+    check_lethality( "grenade_act", 5, 0.95, 0.06, outcome_type::Kill );
+    check_lethality( "grenade_act", 15, 0.40, 0.06, outcome_type::Casualty );
 }
 
 TEST_CASE( "grenade_vs_vehicle", "[grenade],[explosion],[balance]" )

@@ -1,20 +1,22 @@
 #pragma once
-#ifndef SOUNDS_H
-#define SOUNDS_H
+#ifndef CATA_SRC_SOUNDS_H
+#define CATA_SRC_SOUNDS_H
 
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "enum_traits.h"
+#include "units_fwd.h"
 
+class Character;
+class Creature;
+class JsonObject;
+class item;
 class monster;
 class player;
-class Creature;
-class item;
-class JsonObject;
 class translation;
 struct tripoint;
+template <typename E> struct enum_traits;
 
 namespace sounds
 {
@@ -84,7 +86,7 @@ extern bool sound_enabled;
 
 template<>
 struct enum_traits<sounds::sound_t> {
-    static constexpr auto last = sounds::sound_t::_LAST;
+    static constexpr sounds::sound_t last = sounds::sound_t::_LAST;
 };
 
 namespace sfx
@@ -131,8 +133,8 @@ enum class group : int {
 void load_sound_effects( const JsonObject &jsobj );
 void load_sound_effect_preload( const JsonObject &jsobj );
 void load_playlist( const JsonObject &jsobj );
-void play_variant_sound( const std::string &id, const std::string &variant, int volume, int angle,
-                         double pitch_min = -1.0, double pitch_max = -1.0 );
+void play_variant_sound( const std::string &id, const std::string &variant, int volume,
+                         units::angle angle, double pitch_min = -1.0, double pitch_max = -1.0 );
 void play_variant_sound( const std::string &id, const std::string &variant, int volume );
 void play_ambient_variant_sound( const std::string &id, const std::string &variant, int volume,
                                  channel channel, int fade_in_duration, double pitch = -1.0, int loops = -1 );
@@ -145,7 +147,7 @@ void do_hearing_loss( int turns = -1 );
 void remove_hearing_loss();
 void do_projectile_hit( const Creature &target );
 int get_heard_volume( const tripoint &source );
-int get_heard_angle( const tripoint &source );
+units::angle get_heard_angle( const tripoint &source );
 void do_footstep();
 void do_danger_music();
 void do_ambient();
@@ -158,10 +160,10 @@ bool has_variant_sound( const std::string &id, const std::string &variant );
 void stop_sound_effect_fade( channel channel, int duration );
 void stop_sound_effect_timed( channel channel, int time );
 int set_channel_volume( channel channel, int volume );
-void do_player_death_hurt( const player &target, bool death );
+void do_player_death_hurt( const Character &target, bool death );
 void do_fatigue();
 // @param obst should be string id of obstacle terrain or vehicle part
 void do_obstacle( const std::string &obst = "" );
 } // namespace sfx
 
-#endif
+#endif // CATA_SRC_SOUNDS_H

@@ -3,6 +3,7 @@
   * [Tools](#tools)
   * [Dependencies](#dependencies)
   * [Make flags](#make-flags)
+  * [Compiling localization files](#compiling-localization-files)
 * [Debian](#debian)
   * [Linux (native) ncurses builds](#linux-native-ncurses-builds)
   * [Linux (native) SDL builds](#linux-native-sdl-builds)
@@ -36,7 +37,7 @@ You have three major choices here: GCC, Clang and MXE.
 
 (Note that your distro may have separate packages e.g. `gcc` only includes the C compiler and for C++ you'll need to install `g++`.)
 
-Cataclysm is targeting C++14 standard and that means you'll need a compiler that supports it. You can easily check if your version of `g++` supports C++14 by running:
+Cataclysm is targeting the C++14 standard and that means you'll need a compiler that supports it. You can easily check if your version of `g++` supports C++14 by running:
 
     $ g++ --std=c++14
     g++: fatal error: no input files
@@ -60,7 +61,7 @@ If you plan on keeping up with experimentals you should also install `ccache`, w
 
 ## Dependencies
 
-There are some general dependencies, optional dependencies and then specific dependencies for either curses or tiles builds. The exact package names again depend on the distro you're using, and whether your distro packages libraries and their development files separately (e.g. Debian and derivatives).
+There are some general dependencies, optional dependencies, and then specific dependencies for either curses or tiles builds. The exact package names again depend on the distro you're using, and whether your distro packages libraries and their development files separately (e.g. Debian and derivatives).
 
 Rough list based on building on Arch:
 
@@ -90,6 +91,7 @@ Given you're building from source you have a number of choices to make:
   * `CLANG=1` - use Clang instead of GCC
   * `CCACHE=1` - use ccache
   * `USE_LIBCXX=1` - use libc++ instead of libstdc++ with Clang (default on OS X)
+  * `PREFIX=DIR` - causes `make install` to place binaries and data files to DIR (see note below)
 
 There is a couple of other possible options - feel free to read the `Makefile`.
 
@@ -106,11 +108,24 @@ The above will build a debug-enabled curses version for the architecture you are
 **Note on debug**:
 You should probably always build with `RELEASE=1` unless you experience segfaults and are willing to provide stack traces.
 
+**Note on PREFIX**:
+PREFIX specifies a directory which will be the prefix for binaries, resources, and documentation files. Compiling with PREFIX means cataclysm will read files from PREFIX directory. This can be overridden with `--datadir` (e.g. if you used `PREFIX=DIR` in earlier build, then specify `--datadir DIR/share/cataclysm-dda`).
+
+## Compiling localization files
+
+If you want to compile localization files for specific languages, you can add the `LANGUAGES="<lang_id_1> [lang_id_2] [...]"` option to the `make` command:
+
+    make LANGUAGES="zh_CN zh_TW"
+
+You can get the language ID from the filenames of `*.po` in `lang/po` directory. Setting `LOCALIZE=1` only may not tell `make` to compile those localization files for you.
+
+Special note for MinGW: due to a [libintl bug](https://savannah.gnu.org/bugs/index.php?58006), using English without a `.mo` file would cause significant slow down on MinGW targets. In such case you can compile a `.mo` file for English using `make LANGUAGES="en"`. `make LANGUAGE="all"` also compiles a `.mo` file for English in addition to other languages.
+
 # Debian
 
 Instructions for compiling on a Debian-based system. The package names here are valid for Ubuntu 12.10 and may or may not work on your system.
 
-Building instructions, below, always assume you are running them from the Cataclysm:DDA source directory.
+The building instructions below always assume you are running them from the Cataclysm:DDA source directory.
 
 ## Linux (native) ncurses builds
 
@@ -153,7 +168,7 @@ A more comprehensive alternative is:
 
     make -j2 TILES=1 SOUND=1 RELEASE=1 USE_HOME_DIR=1
 
-The -j2 flag means it will compile with two parallel processes. It can be omitted or changed to -j4 in a more modern processor. If there is no desire to have sound, those flags can also be omitted. The USE_HOME_DIR flag places the user files, like configurations and saves into the home folder, making It easier for backups, and can also be omitted.
+The -j2 flag means it will compile with two parallel processes. It can be omitted or changed to -j4 in a more modern processor. If there is no desire to have sound, those flags can also be omitted. The USE_HOME_DIR flag places the user files, like configurations and saves, into the home folder, making it easier for backups, and can also be omitted.
 
 
 
@@ -176,7 +191,7 @@ Run:
 
 ## Cross-compile to Windows from Linux
 
-To cross-compile to Windows from Linux, you will need MXE. The main difference between the native build process and this one, is the use of the CROSS flag for make. The other make flags are still applicable.
+To cross-compile to Windows from Linux, you will need MXE. The main difference between the native build process and this one is the use of the CROSS flag for make. The other make flags are still applicable.
 
   * `CROSS=` - should be the full path to MXE g++ without the *g++* part at the end
 
@@ -202,9 +217,9 @@ Run:
     PLATFORM="i686-w64-mingw32.static"
     make CROSS="~/src/mxe/usr/bin/${PLATFORM}-" TILES=1 SOUND=1 RELEASE=1 LOCALIZE=1
 
-Change PLATFORM to x86_64-w64-mingw32.static for a 64-bit Windows build.
+Change PLATFORM to `x86_64-w64-mingw32.static` for a 64-bit Windows build.
 
-To create nice zip file with all the required resources for a trouble free copy on Windows use the bindist target like this:
+To create a nice zip file with all the required resources for a trouble free copy on Windows use the bindist target like this:
 
     PLATFORM="i686-w64-mingw32.static"
     make CROSS="~/src/mxe/usr/bin/${PLATFORM}-" TILES=1 SOUND=1 RELEASE=1 LOCALIZE=1 bindist
@@ -218,8 +233,8 @@ Run:
 
 ## Cross-compile to Mac OS X from Linux
 
-The procedure is very much similar to cross-compilation to Windows from Linux.
-Tested on ubuntu 14.04 LTS but should work on other distros as well.
+This procedure is very much similar to cross-compilation to Windows from Linux.
+It has ben tested on Ubuntu 14.04 LTS but it should work on other distros as well.
 
 Please note that due to historical difficulties with cross-compilation errors, run-time optimizations are disabled for cross-compilation to Mac OS X targets. (`-O0` is specified as a compilation flag.) See [Pull Request #26564](https://github.com/CleverRaven/Cataclysm-DDA/pull/26564) for details.
 ### Dependencies
@@ -232,14 +247,14 @@ Make sure that all dependency tools are in search `PATH` before compiling.
 
 ### Setup
 
-To set up the compiling environment execute the following commands
+To set up the compiling environment execute the following commands:
 `git clone https://github.com/tpoechtrager/osxcross.git` to clone the toolchain
 `cd osxcross`
-`cp ~/MacOSX10.11.sdk.tar.bz2 ./tarballs/` copy prepared MacOSX SDK tarball on place. [Read more about it](https://github.com/tpoechtrager/osxcross/blob/master/README.md#packaging-the-sdk)
+`cp ~/MacOSX10.11.sdk.tar.bz2 ./tarballs/` to copy prepared MacOSX SDK tarball on place. [Read more about it](https://github.com/tpoechtrager/osxcross/blob/master/README.md#packaging-the-sdk)
 `OSX_VERSION_MIN=10.7 ./build.sh to build everything`
 Note the targeted minimum supported version of OSX.
 
-Have a prepackaged set of libs and frameworks in place, since compiling with `osxcross` built-in MacPorts is rather difficult and not supported at the moment.
+Have a prepackaged set of libs and frameworks in place since compiling with `osxcross` built-in MacPorts is rather difficult and not supported at the moment.
 Your directory tree should look like:
 
     ~/
@@ -257,13 +272,13 @@ Your directory tree should look like:
             └── lib
 
 Populated with respective frameworks, dylibs and headers.
-Tested lib versions are libintl.8.dylib for gettext, libncurses.5.4.dylib for ncurses.
-These libs were obtained from `homebrew` binary distribution at OS X 10.11
-Frameworks were obtained from SDL official website as described in the next [section](#sdl)
+Tested lib versions are libintl.8.dylib for gettext and libncurses.5.4.dylib for ncurses.
+These libs were obtained from `homebrew` binary distribution at OS X 10.11.
+Frameworks were obtained from the SDL official website as described in the next [section](#sdl).
 
 ### Building (SDL)
 
-To build full feature tiles and sound enabled version with localizations enabled:
+To build the full feature tiles and sound enabled version with localizations enabled:
 
     make dmgdist CROSS=x86_64-apple-darwin15- NATIVE=osx OSX_MIN=10.7 USE_HOME_DIR=1 CLANG=1
       RELEASE=1 LOCALIZE=1 LANGUAGES=all TILES=1 SOUND=1 FRAMEWORK=1
@@ -273,7 +288,7 @@ Make sure that `x86_64-apple-darwin15-clang++` is in `PATH` environment variable
 
 ### Building (ncurses)
 
-To build full curses version with localizations enabled:
+To build the full curses version with localizations enabled:
 
     make dmgdist CROSS=x86_64-apple-darwin15- NATIVE=osx OSX_MIN=10.7 USE_HOME_DIR=1 CLANG=1
       RELEASE=1 LOCALIZE=1 LANGUAGES=all OSXCROSS=1 LIBSDIR=../libs FRAMEWORKSDIR=../Frameworks
@@ -321,7 +336,7 @@ Export Android environment variables (you can add these to the end of `~/.bashrc
     export PATH=$PATH:$ANDROID_SDK_ROOT/tools
     export PATH=$PATH:$ANDROID_NDK_ROOT
 
-You can also use this additional variables if you want to use `ccache` to speed up subsequnt builds:
+You can also use these additional variables if you want to use `ccache` to speed up subsequnt builds:
 
     export USE_CCACHE=1
     export NDK_CCACHE=/usr/local/bin/ccache
@@ -357,7 +372,7 @@ The app stores data files on the device in `/sdcard/Android/data/com.cleverraven
 
 ## Linux Troubleshooting
 
-If you get an error stating `make: build-scripts/validate_pr_in_jenkins: Command not found` clone a separate copy of the upstream source to a new git repository as your git setup has become corrupted by the Blob.
+If you get an error stating `make: build-scripts/validate_pr_in_jenkins: Command not found`, clone a separate copy of the upstream source to a new git repository as your git setup has become corrupted by the Blob.
 
 # Mac OS X
 
@@ -365,7 +380,7 @@ To build Cataclysm on Mac you'll need [Command Line Tools for Xcode](https://dev
 
 ## Simple build using Homebrew
 
-Homebrew installation will come with tiles and sound support enabled.
+A homebrew installation will come with tiles and sound support enabled.
 
 Once you have Homebrew installed, open Terminal and run one of the following commands.
 
@@ -396,7 +411,7 @@ For most people, the simple Homebrew installation is enough. For developers, her
 
 ### SDL
 
-SDL2, SDL2_image, and SDL2_ttf are needed for the tiles build. Optionally, you can add SDL2_mixer for sound support. Cataclysm can be built using either the SDL framework, or shared libraries built from source.
+SDL2, SDL2_image, and SDL2_ttf are needed for the tiles build. Optionally, you can add SDL2_mixer for sound support. Cataclysm can be built using either the SDL framework or shared libraries built from source.
 
 The SDL framework files can be downloaded here:
 
@@ -438,11 +453,6 @@ ncurses (with wide character support enabled) and gettext are needed if you want
 For Homebrew:
 
     brew install gettext ncurses
-    brew link --force gettext ncurses
-
-Then, after compiling, be sure to unlink these libraries to prevent conflicts with the OS X shared libraries:
-
-    brew unlink gettext ncurses
 
 For MacPorts:
 
@@ -482,6 +492,7 @@ The Cataclysm source is compiled using `make`.
 * `SOUND=1` - if you want sound; this requires `TILES=1` and the additional dependencies mentioned above.
 * `FRAMEWORK=1` (tiles only) link to SDL libraries under the OS X Frameworks folders; omit to use SDL shared libraries from Homebrew or Macports.
 * `LOCALIZE=0` disable localization (to get around possible `gettext` errors if it is not setup correctly); omit to use `gettext`.
+* `BREWGETTEXT=1` set this if you don't set LOCALIZE=0 and have installed `gettext` from homebrew--homebrew will refuse to link gettext in recent versions.
 * `LANGUAGES="<lang_id_1>[lang_id_2][...]"` compile localization files for specified languages. e.g. `LANGUAGES="zh_CN zh_TW"`. You can also use `LANGUAGES=all` to compile all localization files.
 * `RELEASE=1` build an optimized release version; omit for debug build.
 * `CLANG=1` build with [Clang](http://clang.llvm.org/), the compiler that's included with the latest Command Line Tools for Xcode; omit to build using gcc/g++.
@@ -507,14 +518,6 @@ Build a release curses version with gettext supplied by Macports:
 
     make NATIVE=osx OSX_MIN=10.12 RELEASE=1 LOCALIZE=1 MACPORTS=1 CLANG=1
 
-### Compiling localization files
-
-If you just want to compile localization files for specified languages, you can add `LANGUAGES="<lang_id_1>[lang_id_2][...]"` option to make command:
-
-    make LANGUAGES="zh_CN zh_TW"
-
-You can get the language ID from the filenames of `*.po` in `lang/po` directory. Setting `LOCALIZE=1` may not tell `make` to compile those localization files for you.
-
 ### Running
 
 For curses builds:
@@ -535,7 +538,7 @@ Pass the ``--help`` flag to list options.
 
 ### dmg distribution
 
-You can build a nice dmg distribution file with the `dmgdist` target. You will need a tool called [dmgbuild](https://pypi.python.org/pypi/dmgbuild). To install this tool, you will need Python first. If you are on Mac OS X >= 10.8, Python 2.7 is pre-installed with the OS. If you are on an older version of OS X, you can download Python [on their official website](https://www.python.org/downloads/) or install it with homebrew `brew install python`. Once you have Python, you should be able to install `dmgbuild` by running:
+You can build a nice dmg distribution file with the `dmgdist` target. You will need a tool called [dmgbuild](https://pypi.python.org/pypi/dmgbuild). To install this tool, you may need to install Python first. You can download Python [on their official website](https://www.python.org/downloads/) or install it with homebrew `brew install python`. Once you have Python, you should be able to install `dmgbuild` by running:
 
     # This install pip. It might not be required if it is already installed.
     curl --silent --show-error --retry 5 https://bootstrap.pypa.io/get-pip.py | sudo python

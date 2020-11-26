@@ -176,14 +176,6 @@
   },
   {
     "type": "overmap_terrain",
-    "id": "house",
-    "copy-from": "house",
-    "name": "house",
-    "sym": "^",
-    "color": "light_green"
-  },
-  {
-    "type": "overmap_terrain",
     "id": "house_prepper",
     "copy-from": "house_prepper",
     "name": "house",
@@ -802,7 +794,7 @@
     "type": "overmap_terrain",
     "id": "mil_surplus",
     "copy-from": "mil_surplus",
-    "name": "mil. surplus",
+    "name": { "str": "mil. surplus", "//NOLINT(cata-text-style)": "not a period" },
     "sym": "m",
     "color": "magenta"
   },
@@ -4999,7 +4991,7 @@
     "type": "overmap_terrain",
     "id": "necropolis_d_38",
     "copy-from": "necropolis_d_38",
-    "name": "Vault - Maint. Bay",
+    "name": { "str": "Vault - Maint. Bay", "//NOLINT(cata-text-style)": "not a period" },
     "sym": "M",
     "color": "yellow"
   },
@@ -5007,7 +4999,7 @@
     "type": "overmap_terrain",
     "id": "necropolis_d_39",
     "copy-from": "necropolis_d_39",
-    "name": "Vault - Maint. Bay",
+    "name": { "str": "Vault - Maint. Bay", "//NOLINT(cata-text-style)": "not a period" },
     "sym": "M",
     "color": "yellow"
   },
@@ -7427,8 +7419,8 @@
     "id": "bandit_garage_2",
     "copy-from": "bandit_garage_2",
     "name": "forest",
-    "sym": "b",
-    "color": "light_blue"
+    "sym": "#",
+    "color": "green"
   },
   {
     "id": "pavilion",
@@ -8061,14 +8053,6 @@
     "name": "pond",
     "sym": "#",
     "color": "blue"
-  },
-  {
-    "type": "overmap_terrain",
-    "id": "mass_grave",
-    "copy-from": "mass_grave",
-    "name": "mass grave",
-    "sym": "m",
-    "color": "red"
   },
   {
     "type": "overmap_terrain",

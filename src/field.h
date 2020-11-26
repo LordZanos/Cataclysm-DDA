@@ -1,15 +1,17 @@
 #pragma once
-#ifndef FIELD_H
-#define FIELD_H
+#ifndef CATA_SRC_FIELD_H
+#define CATA_SRC_FIELD_H
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "calendar.h"
 #include "color.h"
+#include "enums.h"
 #include "field_type.h"
-
-class effect;
+#include "int_id.h"
+#include "type_id.h"
 
 /**
  * An active or passive effect existing on a tile.
@@ -18,7 +20,8 @@ class effect;
 class field_entry
 {
     public:
-        field_entry() : type( fd_null ), intensity( 1 ), age( 0_turns ), is_alive( false ) { }
+        field_entry() : type( fd_null.id_or( INVALID_FIELD_TYPE_ID ) ), intensity( 1 ), age( 0_turns ),
+            is_alive( false ) { }
         field_entry( const field_type_id &t, const int i, const time_duration &a ) : type( t ),
             intensity( i ), age( a ), is_alive( true ) { }
 
@@ -42,6 +45,7 @@ class field_entry
         mongroup_id monster_spawn_group() const;
 
         float light_emitted() const;
+        float local_light_override() const;
         float translucency() const;
         bool is_transparent() const;
         int convection_temperature_mod() const;
@@ -60,6 +64,7 @@ class field_entry
         int get_field_intensity() const;
         // Allows you to modify the intensity of the current field entry.
         int set_field_intensity( int new_intensity );
+        void mod_field_intensity( int mod );
 
         /// @returns @ref age.
         time_duration get_field_age() const;
@@ -89,7 +94,7 @@ class field_entry
         }
 
         bool gas_can_spread() {
-            return is_field_alive() && type.obj().phase == GAS && type.obj().percent_spread > 0;
+            return is_field_alive() && type.obj().phase == phase_id::GAS && type.obj().percent_spread > 0;
         }
 
         time_duration get_underwater_age_speedup() const {
@@ -104,6 +109,8 @@ class field_entry
             return type.obj().accelerated_decay;
         }
 
+        void do_decay();
+
         std::vector<field_effect> field_effects() const;
 
     private:
@@ -113,6 +120,8 @@ class field_entry
         int intensity;
         // The age, of the field effect. 0 is permanent.
         time_duration age;
+        // The time when the field will decay, initialized to 0.
+        time_point decay_time;
         // True if this is an active field, false if it should be destroyed next check.
         bool is_alive;
 };
@@ -199,4 +208,4 @@ class field
         field_type_id _displayed_field_type;
 };
 
-#endif
+#endif // CATA_SRC_FIELD_H

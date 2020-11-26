@@ -1,15 +1,26 @@
 #pragma once
-#ifndef UNITS_H
-#define UNITS_H
+#ifndef CATA_SRC_UNITS_H
+#define CATA_SRC_UNITS_H
 
+#include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <map>
 #include <ostream>
+#include <sstream>
+#include <string>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
-#include "calendar.h"
+#include "compatibility.h"
 #include "json.h"
+#include "math_defines.h"
 #include "translations.h"
+#include "units_fwd.h" // IWYU pragma: export
 
 namespace units
 {
@@ -90,8 +101,8 @@ class quantity
          *   quantity<int, foo> a( 10, foo{} );
          *   quantity<double, foo> b( 0.5, foo{} );
          *   a += b;
-         *   assert( a == quantity<int, foo>( 10 + 0.5, foo{} ) );
-         *   assert( a == quantity<int, foo>( 10, foo{} ) );
+         *   cata_assert( a == quantity<int, foo>( 10 + 0.5, foo{} ) );
+         *   cata_assert( a == quantity<int, foo>( 10, foo{} ) );
          * \endcode
          */
         /**@{*/
@@ -131,6 +142,18 @@ class quantity
         value_type value_;
 };
 
+template<typename V, typename U>
+inline quantity<V, U> fabs( quantity<V, U> q )
+{
+    return quantity<V, U>( std::fabs( q.value() ), U{} );
+}
+
+template<typename V, typename U>
+inline quantity<V, U> fmod( quantity<V, U> num, quantity<V, U> den )
+{
+    return quantity<V, U>( std::fmod( num.value(), den.value() ), U{} );
+}
+
 /**
  * Multiplication and division with scalars. Result is a quantity with the same unit
  * as the input.
@@ -146,9 +169,9 @@ class quantity
  * \code
  *   quantity<int, foo> a{ 10, foo{} };
  *   a *= 4.52;
- *   assert( a == quantity<int, foo>( 10 * 4.52, foo{} ) );
- *   assert( a != quantity<int, foo>( 10 * (int)4.52, foo{} ) );
- *   assert( a == quantity<int, foo>( 45, foo{} ) );
+ *   cata_assert( a == quantity<int, foo>( 10 * 4.52, foo{} ) );
+ *   cata_assert( a != quantity<int, foo>( 10 * (int)4.52, foo{} ) );
+ *   cata_assert( a == quantity<int, foo>( 45, foo{} ) );
  * \endcode
  *
  * Division of a quantity with a quantity of the same unit yields a dimensionless
@@ -158,7 +181,7 @@ class quantity
  *   quantity<double, foo> b{ 20, foo{} };
  *   auto proportion = a / b;
  *   static_assert(std::is_same<decltype(proportion), double>::value);
- *   assert( proportion == 10 / 20.0 );
+ *   cata_assert( proportion == 10 / 20.0 );
  * \endcode
  *
  */
@@ -269,12 +292,6 @@ operator%=( quantity<lvt, ut> &lhs, const quantity<rvt, ut> &rhs )
 }
 /**@}*/
 
-class volume_in_milliliter_tag
-{
-};
-
-using volume = quantity<int, volume_in_milliliter_tag>;
-
 const volume volume_min = units::volume( std::numeric_limits<units::volume::value_type>::min(),
                           units::volume::unit_type{} );
 
@@ -308,12 +325,6 @@ inline constexpr double to_liter( const volume &v )
 // Legacy conversions factor for old volume values.
 // Don't use in new code! Use one of the from_* functions instead.
 static constexpr volume legacy_volume_factor = from_milliliter( 250 );
-
-class mass_in_milligram_tag
-{
-};
-
-using mass = quantity<std::int64_t, mass_in_milligram_tag>;
 
 const mass mass_min = units::mass( std::numeric_limits<units::mass::value_type>::min(),
                                    units::mass::unit_type{} );
@@ -358,12 +369,6 @@ inline constexpr double to_kilogram( const mass &v )
 {
     return v.value() / 1000000.0;
 }
-
-class energy_in_millijoule_tag
-{
-};
-
-using energy = quantity<int, energy_in_millijoule_tag>;
 
 const energy energy_min = units::energy( std::numeric_limits<units::energy::value_type>::min(),
                           units::energy::unit_type{} );
@@ -417,12 +422,6 @@ inline constexpr value_type to_kilojoule( const quantity<value_type, energy_in_m
     return to_joule( v ) / 1000.0;
 }
 
-class money_in_cent_tag
-{
-};
-
-using money = quantity<int, money_in_cent_tag>;
-
 const money money_min = units::money( std::numeric_limits<units::money::value_type>::min(),
                                       units::money::unit_type{} );
 
@@ -466,6 +465,107 @@ inline constexpr value_type to_kusd( const quantity<value_type, money_in_cent_ta
     return to_usd( v ) / 1000.0;
 }
 
+const length length_min = units::length( std::numeric_limits<units::length::value_type>::min(),
+                          units::length::unit_type{} );
+
+const length length_max = units::length( std::numeric_limits<units::length::value_type>::max(),
+                          units::length::unit_type{} );
+
+template<typename value_type>
+inline constexpr quantity<value_type, length_in_millimeter_tag> from_millimeter(
+    const value_type v )
+{
+    return quantity<value_type, length_in_millimeter_tag>( v, length_in_millimeter_tag{} );
+}
+
+template<typename value_type>
+inline constexpr quantity<value_type, length_in_millimeter_tag> from_centimeter(
+    const value_type v )
+{
+    return from_millimeter<value_type>( v * 10 );
+}
+
+template<typename value_type>
+inline constexpr quantity<value_type, length_in_millimeter_tag> from_meter(
+    const value_type v )
+{
+    return from_millimeter<value_type>( v * 1000 );
+}
+
+template<typename value_type>
+inline constexpr quantity<value_type, length_in_millimeter_tag> from_kilometer(
+    const value_type v )
+{
+    return from_millimeter<value_type>( v * 1'000'000 );
+}
+
+template<typename value_type>
+inline constexpr value_type to_millimeter( const quantity<value_type, length_in_millimeter_tag> &v )
+{
+    return v / from_millimeter<value_type>( 1 );
+}
+
+template<typename value_type>
+inline constexpr value_type to_centimeter( const quantity<value_type, length_in_millimeter_tag> &v )
+{
+    return to_millimeter( v ) / 10.0;
+}
+
+template<typename value_type>
+inline constexpr value_type to_meter( const quantity<value_type, length_in_millimeter_tag> &v )
+{
+    return to_millimeter( v ) / 1'000.0;
+}
+
+template<typename value_type>
+inline constexpr value_type to_kilometer( const quantity<value_type, length_in_millimeter_tag> &v )
+{
+    return to_millimeter( v ) / 1'000'000.0;
+}
+
+template<typename value_type>
+inline constexpr quantity<value_type, angle_in_radians_tag> from_radians( const value_type v )
+{
+    return quantity<value_type, angle_in_radians_tag>( v, angle_in_radians_tag{} );
+}
+
+inline constexpr double to_radians( const units::angle v )
+{
+    return v.value();
+}
+
+template<typename value_type>
+inline constexpr quantity<double, angle_in_radians_tag> from_degrees( const value_type v )
+{
+    return from_radians( v * M_PI / 180 );
+}
+
+inline constexpr double to_degrees( const units::angle v )
+{
+    return to_radians( v ) * 180 / M_PI;
+}
+
+template<typename value_type>
+inline constexpr quantity<double, angle_in_radians_tag> from_arcmin( const value_type v )
+{
+    return from_degrees( v / 60.0 );
+}
+
+inline constexpr double to_arcmin( const units::angle v )
+{
+    return to_degrees( v ) * 60;
+}
+
+// converts a volume as if it were a cube to the length of one side
+template<typename value_type>
+inline constexpr quantity<value_type, length_in_millimeter_tag> default_length_from_volume(
+    const quantity<value_type, volume_in_milliliter_tag> &v )
+{
+    return units::from_centimeter<int>(
+               std::round(
+                   std::cbrt( units::to_milliliter( v ) ) ) );
+}
+
 // Streaming operators for debugging and tests
 // (for UI output other functions should be used which render in the user's
 // chosen units)
@@ -489,10 +589,28 @@ inline std::ostream &operator<<( std::ostream &o, money_in_cent_tag )
     return o << "cent";
 }
 
+inline std::ostream &operator<<( std::ostream &o, length_in_millimeter_tag )
+{
+    return o << "mm";
+}
+
+inline std::ostream &operator<<( std::ostream &o, angle_in_radians_tag )
+{
+    return o << "rad";
+}
+
 template<typename value_type, typename tag_type>
 inline std::ostream &operator<<( std::ostream &o, const quantity<value_type, tag_type> &v )
 {
     return o << v.value() << tag_type{};
+}
+
+template<typename value_type, typename tag_type>
+inline std::string quantity_to_string( const quantity<value_type, tag_type> &v )
+{
+    std::ostringstream os;
+    os << v;
+    return os.str();
 }
 
 inline std::string display( const units::energy v )
@@ -500,12 +618,12 @@ inline std::string display( const units::energy v )
     const int kj = units::to_kilojoule( v );
     const int j = units::to_joule( v );
     // at least 1 kJ and there is no fraction
-    if( kj >= 1 && float( j ) / kj == 1000 ) {
+    if( kj >= 1 && static_cast<float>( j ) / kj == 1000 ) {
         return to_string( kj ) + ' ' + pgettext( "energy unit: kilojoule", "kJ" );
     }
     const int mj = units::to_millijoule( v );
     // at least 1 J and there is no fraction
-    if( j >= 1 && float( mj ) / j  == 1000 ) {
+    if( j >= 1 && static_cast<float>( mj ) / j  == 1000 ) {
         return to_string( j ) + ' ' + pgettext( "energy unit: joule", "J" );
     }
     return to_string( mj ) + ' ' + pgettext( "energy unit: millijoule", "mJ" );
@@ -636,8 +754,113 @@ inline constexpr units::quantity<double, units::money_in_cent_tag> operator"" _k
     return units::from_kusd( v );
 }
 
+inline constexpr units::quantity<double, units::length_in_millimeter_tag> operator"" _mm(
+    const long double v )
+{
+    return units::from_millimeter( v );
+}
+
+inline constexpr units::length operator"" _mm( const unsigned long long v )
+{
+    return units::from_millimeter( v );
+}
+
+inline constexpr units::quantity<double, units::length_in_millimeter_tag> operator"" _cm(
+    const long double v )
+{
+    return units::from_centimeter( v );
+}
+
+inline constexpr units::length operator"" _cm( const unsigned long long v )
+{
+    return units::from_centimeter( v );
+}
+
+inline constexpr units::quantity<double, units::length_in_millimeter_tag> operator"" _meter(
+    const long double v )
+{
+    return units::from_meter( v );
+}
+
+inline constexpr units::length operator"" _meter( const unsigned long long v )
+{
+    return units::from_meter( v );
+}
+
+inline constexpr units::quantity<double, units::length_in_millimeter_tag> operator"" _km(
+    const long double v )
+{
+    return units::from_kilometer( v );
+}
+
+inline constexpr units::length operator"" _km( const unsigned long long v )
+{
+    return units::from_kilometer( v );
+}
+
+inline constexpr units::angle operator"" _radians( const long double v )
+{
+    return units::from_radians( v );
+}
+
+inline constexpr units::angle operator"" _radians( const unsigned long long v )
+{
+    return units::from_radians( v );
+}
+
+inline constexpr units::angle operator"" _pi_radians( const long double v )
+{
+    return units::from_radians( v * M_PI );
+}
+
+inline constexpr units::angle operator"" _pi_radians( const unsigned long long v )
+{
+    return units::from_radians( v * M_PI );
+}
+
+inline constexpr units::angle operator"" _degrees( const long double v )
+{
+    return units::from_degrees( v );
+}
+
+inline constexpr units::angle operator"" _degrees( const unsigned long long v )
+{
+    return units::from_degrees( v );
+}
+
+inline constexpr units::angle operator"" _arcmin( const long double v )
+{
+    return units::from_arcmin( v );
+}
+
+inline constexpr units::angle operator"" _arcmin( const unsigned long long v )
+{
+    return units::from_arcmin( v );
+}
+
 namespace units
 {
+
+inline double sin( angle a )
+{
+    return std::sin( to_radians( a ) );
+}
+
+inline double cos( angle a )
+{
+    return std::cos( to_radians( a ) );
+}
+
+inline double tan( angle a )
+{
+    return std::tan( to_radians( a ) );
+}
+
+inline units::angle atan2( double y, double x )
+{
+    return from_radians( std::atan2( y, x ) );
+}
+
 static const std::vector<std::pair<std::string, energy>> energy_units = { {
         { "mJ", 1_mJ },
         { "J", 1_J },
@@ -659,6 +882,19 @@ static const std::vector<std::pair<std::string, money>> money_units = { {
 static const std::vector<std::pair<std::string, volume>> volume_units = { {
         { "ml", 1_ml },
         { "L", 1_liter }
+    }
+};
+static const std::vector<std::pair<std::string, length>> length_units = { {
+        { "mm", 1_mm },
+        { "cm", 1_cm },
+        { "meter", 1_meter },
+        { "km", 1_km }
+    }
+};
+static const std::vector<std::pair<std::string, angle>> angle_units = { {
+        { "arcmin", 1_arcmin },
+        { "°", 1_degrees },
+        { "rad", 1_radians },
     }
 };
 } // namespace units
@@ -693,8 +929,8 @@ T read_from_json_string( JsonIn &jsin, const std::vector<std::pair<std::string, 
             }
         }
         error( "invalid quantity string: unknown unit" );
-        // above always throws
-        throw;
+        // above always throws but lambdas cannot be marked [[noreturn]]
+        throw std::string( "Exceptionally impossible" );
     };
 
     if( skip_spaces() ) {
@@ -721,4 +957,51 @@ T read_from_json_string( JsonIn &jsin, const std::vector<std::pair<std::string, 
     return result;
 }
 
-#endif
+template<typename T>
+void dump_to_json_string( T t, JsonOut &jsout,
+                          const std::vector<std::pair<std::string, T>> &units )
+{
+    // deduplicate unit strings and choose the shortest representations
+    std::map<T, std::string> sorted_units;
+    for( const auto &p : units ) {
+        const auto it = sorted_units.find( p.second );
+        if( it != sorted_units.end() ) {
+            if( p.first.length() < it->second.length() ) {
+                it->second = p.first;
+            }
+        } else {
+            sorted_units.emplace( p.second, p.first );
+        }
+    }
+    std::string str;
+    bool written = false;
+    for( auto it = sorted_units.rbegin(); it != sorted_units.rend(); ++it ) {
+        const int val = static_cast<int>( t / it->first );
+        if( val != 0 ) {
+            if( written ) {
+                str += ' ';
+            }
+            int tmp = val;
+            if( tmp < 0 ) {
+                str += '-';
+                tmp = -tmp;
+            }
+            const size_t val_beg = str.size();
+            while( tmp != 0 ) {
+                str += static_cast<char>( '0' + tmp % 10 );
+                tmp /= 10;
+            }
+            std::reverse( str.begin() + val_beg, str.end() );
+            str += ' ';
+            str += it->second;
+            written = true;
+            t -= it->first * val;
+        }
+    }
+    if( str.empty() ) {
+        str = "0 " + sorted_units.begin()->second;
+    }
+    jsout.write( str );
+}
+
+#endif // CATA_SRC_UNITS_H
