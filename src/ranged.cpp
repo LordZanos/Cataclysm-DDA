@@ -3422,7 +3422,7 @@ bool gunmode_checks_weapon( avatar &you, const map &m, std::vector<std::string> 
         }
     }
 
-    if( gmode->has_flag( flag_MOUNTED_GUN ) ) {
+    if( gmode->has_flag( flag_MOUNTED_GUN ) && you.get_str() < 16 ) {
         const bool v_mountable = static_cast<bool>( m.veh_at( you.pos() ).part_with_feature( "MOUNTABLE",
                                  true ) );
         bool t_mountable = m.has_flag_ter_or_furn( flag_MOUNTABLE, you.pos() );
