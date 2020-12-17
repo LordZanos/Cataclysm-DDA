@@ -116,7 +116,6 @@ std::string enum_to_string<m_flag>( m_flag data )
         case MF_FUR: return "FUR";
         case MF_LEATHER: return "LEATHER";
         case MF_WOOL: return "WOOL";
-        case MF_FEATHER: return "FEATHER";
         case MF_CBM_CIV: return "CBM_CIV";
         case MF_BONES: return "BONES";
         case MF_FAT: return "FAT";
@@ -374,7 +373,7 @@ void MonsterGenerator::finalize_mtypes()
         }
 
         apply_species_attributes( mon );
-        set_species_ids( mon );
+        validate_species_ids( mon );
         mon.size = volume_to_size( mon.volume );
 
         // adjust for worldgen difficulty parameters
@@ -662,12 +661,10 @@ void MonsterGenerator::init_defense()
     defense_map["RETURN_FIRE"] = &mdefense::return_fire;
 }
 
-void MonsterGenerator::set_species_ids( mtype &mon )
+void MonsterGenerator::validate_species_ids( mtype &mon )
 {
     for( const auto &s : mon.species ) {
-        if( s.is_valid() ) {
-            mon.species_ptrs.insert( &s.obj() );
-        } else {
+        if( !s.is_valid() ) {
             debugmsg( "Tried to assign species %s to monster %s, but no entry for the species exists",
                       s.c_str(), mon.id.c_str() );
         }

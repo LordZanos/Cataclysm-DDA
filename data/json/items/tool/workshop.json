@@ -109,8 +109,9 @@
   {
     "id": "kiln_pseudo",
     "type": "TOOL",
-    "name": { "str": "Kiln" },
+    "name": { "str": "clay kiln" },
     "copy-from": "brick_kiln",
+    "sub": "brick_kiln",
     "pocket_data": [ { "pocket_type": "MAGAZINE", "ammo_restriction": { "charcoal": 40000 } } ]
   },
   {
@@ -869,13 +870,13 @@
         "max_contains_volume": "20 L",
         "max_contains_weight": "20 kg",
         "item_restriction": [
+          "light_disposable_cell",
           "light_minus_battery_cell",
           "light_battery_cell",
           "light_plus_battery_cell",
           "light_atomic_battery_cell",
           "light_minus_atomic_battery_cell",
-          "light_minus_disposable_cell",
-          "light_disposable_cell"
+          "light_minus_disposable_cell"
         ]
       }
     ]
